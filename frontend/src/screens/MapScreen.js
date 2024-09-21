@@ -1,5 +1,3 @@
-// src/screens/MapScreen.js
-
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import axios from 'axios'; // Import axios
@@ -22,7 +20,6 @@ const MapScreen = () => {
     const [loading, setLoading] = useState(true);
     const mapRef = useRef(null);
 
-    // Fetch pins from the backend
     useEffect(() => {
         const fetchPins = async () => {
             try {
