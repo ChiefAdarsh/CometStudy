@@ -1,0 +1,17 @@
+{
+  "name": "cometroute",
+  "version": "1.0.0",
+  "description": "Helps students get around utd campus",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "author": "Adarsh Goura",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0",
+    "nodemon": "^3.1.7",
+    "react-native-geocoder": "^0.5.0",
+    "react-native-maps": "^1.18.0"
+  }
+}
