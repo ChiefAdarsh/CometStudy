@@ -1,47 +1,43 @@
-require('dotenv').config();
+// backend/app.js
+
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const app = express();
+const PORT = 8000;
+
+// Middleware
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
+// In-memory storage for pins (for now, use a database like MongoDB for production)
+let pins = [];
 
-app.get('/', (req, res) => {
-    res.send('CometRoute Backend Server');
+// Get all pins
+app.get('/pins', (req, res) => {
+    res.json(pins);
 });
 
+// Add a new pin
+app.post('/pins', (req, res) => {
+    const { latitude, longitude, name } = req.body;
+    const newPin = { latitude, longitude, name };
+    pins.push(newPin);
+    res.status(201).json(newPin);
+});
 
-const PORT = process.env.PORT || 8000;
+// Delete a pin
+app.delete('/pins/:index', (req, res) => {
+    const index = req.params.index;
+    if (index < 0 || index >= pins.length) {
+        return res.status(404).json({ error: 'Invalid index' });
+    }
+    const removedPin = pins.splice(index, 1);
+    res.status(200).json(removedPin);
+});
+
+// Start the server
 app.listen(PORT, () => {
-    console.log(`Backend server is running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
-
-
-app.get('/geocode', async (req, res) => {
-    const { address } = req.query;
-    if (!address) {
-        return res.status(400).json({ error: 'Address is required' });
-    }
-
-    try {
-        const response = await axios.get('https://api.opencagedata.com/geocode/v1/json', {
-            params: {
-                key: process.env.OPENCAGE_API_KEY,
-                q: address,
-                limit: 1,
-            },
-        });
-
-        if (response.data.results.length === 0) {
-            return res.status(404).json({ error: 'No results found' });
-        }
-
-        const location = response.data.results[0].geometry;
-        res.json(location);
-    } catch (error) {
-        res.status(500).json({ error: 'Geocoding request failed' });
-    }
-});
-
