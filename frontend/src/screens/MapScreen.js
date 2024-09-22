@@ -1,4 +1,3 @@
-// screens/MapScreen.js
 import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
@@ -6,19 +5,20 @@ import {
     TextInput,
     TouchableOpacity,
     ActivityIndicator,
+    Alert,
 } from 'react-native';
 import MapView, { Marker, Callout, Polyline } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddSessionModal from '../components/AddSessionModal';
 import StudySessionsList from '../components/StudySessionsList';
 import { styles } from '../styles/styles';
 import { decodePolyline } from '../utils/polylineDecoder';
 import { utdBuildings } from './utdBuildings';
 
-
 const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4'; // Replace with your API key
-const BACKEND_URL = 'http://localhost:8000'; // Update with your backend URL
+const BACKEND_URL = 'http://10.122.152.209:8000'; // Update with your backend URL
 
 const MapScreen = () => {
     const [markerCoords, setMarkerCoords] = useState([]);
@@ -31,7 +31,6 @@ const MapScreen = () => {
     const [userLocation, setUserLocation] = useState(null);
     const [loadingLocation, setLoadingLocation] = useState(true);
     const [directionsPath, setDirectionsPath] = useState([]);
-
     const [modalVisible, setModalVisible] = useState(false);
     const [searchText, setSearchText] = useState('');
 
@@ -59,29 +58,53 @@ const MapScreen = () => {
 
     useEffect(() => {
         // Fetch study sessions from the backend
-        fetch(`${BACKEND_URL}/sessions`)
-            .then(response => response.json())
-            .then(data => {
-                setMarkerCoords(data);
-            })
-            .catch(error => {
-                console.error('Error fetching study sessions:', error);
-            });
+        const fetchSessions = async () => {
+            try {
+                const token = await AsyncStorage.getItem('token');  // Get token from AsyncStorage
+                const response = await fetch(`${BACKEND_URL}/sessions`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,  // Attach token to the Authorization header
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setMarkerCoords(data);
+                } else {
+                    Alert.alert('Error', 'Unable to fetch study sessions');
+                }
+            } catch (error) {
+                Alert.alert('Error', 'Unable to fetch study sessions. Please try again later.');
+            }
+        };
+
+        fetchSessions();
     }, []);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const currentTime = Date.now();
-            const updatedMarkers = markerCoords.filter(
-                (marker) => marker.expiryTime > currentTime
-            );
-            if (updatedMarkers.length !== markerCoords.length) {
-                setMarkerCoords(updatedMarkers);
-            }
-        }, 60000);
+    const handleAddSession = async (newSession) => {
+        try {
+            const token = await AsyncStorage.getItem('token');  // Get token from AsyncStorage
 
-        return () => clearInterval(interval);
-    }, [markerCoords]);
+            const response = await fetch(`${BACKEND_URL}/sessions`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,  // Attach token to the Authorization header
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newSession),
+            });
+
+            if (response.ok) {
+                const session = await response.json();
+                setMarkerCoords((prev) => [...prev, session]);
+            } else {
+                Alert.alert('Error', 'Unable to add study session');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Unable to add study session. Please try again later.');
+        }
+    };
 
     const getDirections = async (destination) => {
         const origin = `${userLocation.latitude},${userLocation.longitude}`;
@@ -104,45 +127,13 @@ const MapScreen = () => {
         }
     };
 
-    const handleAddSession = ({ newSessionName, selectedLocation, roomNumber, temporaryExpiryTime }) => {
-        let expiryTimestamp = new Date(temporaryExpiryTime);
-        expiryTimestamp.setSeconds(0);
-        expiryTimestamp.setMilliseconds(0);
-
-        if (expiryTimestamp.getTime() <= Date.now()) {
-            expiryTimestamp.setDate(expiryTimestamp.getDate() + 1);
-        }
-
-        const newMarker = {
-            id: Date.now().toString(),
-            latitude: selectedLocation.latitude,
-            longitude: selectedLocation.longitude,
-            name: newSessionName,
-            roomNumber: roomNumber,
-            expiryTime: expiryTimestamp.getTime(),
-        };
-
-        // Send POST request to backend
-        fetch(`${BACKEND_URL}/sessions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(newMarker),
-        })
-            .then(response => response.json())
-            .then(data => {
-                setMarkerCoords([...markerCoords, data]);
-            })
-            .catch(error => {
-                console.error('Error adding study session:', error);
-            });
-    };
-
     const handleDelete = (id) => {
         // Send DELETE request to backend
         fetch(`${BACKEND_URL}/sessions/${id}`, {
             method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,  // Attach token to the Authorization header
+            }
         })
             .then(response => response.json())
             .then(data => {
