@@ -1,4 +1,3 @@
-// components/AddSessionModal.js
 import React, { useState } from 'react';
 import {
     View,
@@ -17,8 +16,6 @@ import { styles } from '../styles/styles';
 
 const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4'; // Replace with your API key
 
-
-
 const AddSessionModal = ({
     modalVisible,
     setModalVisible,
@@ -30,6 +27,7 @@ const AddSessionModal = ({
     const [roomNumber, setRoomNumber] = useState('');
     const [temporaryExpiryTime, setTemporaryExpiryTime] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [selectedExpiryTime, setSelectedExpiryTime] = useState(null);
 
     // Filter the UTD buildings based on the search text
     const [searchText, setSearchText] = useState('');
@@ -99,7 +97,9 @@ const AddSessionModal = ({
                             <View pointerEvents="none">
                                 <TextInput
                                     style={styles.timeInput}
-                                    value={temporaryExpiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    value={selectedExpiryTime
+                                        ? selectedExpiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                        : temporaryExpiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     editable={false}
                                 />
                             </View>
@@ -108,14 +108,16 @@ const AddSessionModal = ({
 
                     {showDatePicker && (
                         <DateTimePicker
-                            value={temporaryExpiryTime}
+                            value={selectedExpiryTime || temporaryExpiryTime}  // Use selectedExpiryTime if available
                             mode="time"
                             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                             onChange={(event, selectedDate) => {
-                                if (selectedDate) {
-                                    setTemporaryExpiryTime(selectedDate);
+                                if (event.type === "set") {
+                                    // User confirmed the time selection
+                                    setSelectedExpiryTime(selectedDate || temporaryExpiryTime);
                                 }
-                                setShowDatePicker(false);
+                                // Close the picker regardless of whether a date was selected or not
+                                setShowDatePicker(Platform.OS === 'ios');
                             }}
                         />
                     )}
@@ -124,12 +126,14 @@ const AddSessionModal = ({
                         <Button
                             title="Add Study Session"
                             onPress={() => {
-                                if (selectedLocation && newSessionName && roomNumber && temporaryExpiryTime) {
+                                const expiryTimeToUse = selectedExpiryTime || temporaryExpiryTime;
+
+                                if (selectedLocation && newSessionName && roomNumber && expiryTimeToUse) {
                                     const sessionData = {
                                         newSessionName,
                                         selectedLocation,
                                         roomNumber,
-                                        temporaryExpiryTime,
+                                        temporaryExpiryTime: expiryTimeToUse,  // Use the selected time or the default one
                                     };
                                     console.log('Session Data to be sent:', sessionData);  // Log the session data
 
@@ -139,6 +143,7 @@ const AddSessionModal = ({
                                     setSelectedLocation(null);
                                     setRoomNumber('');
                                     setTemporaryExpiryTime(new Date());
+                                    setSelectedExpiryTime(null);
                                 } else {
                                     Alert.alert('Error', 'Please fill all the fields.');
                                 }
@@ -152,6 +157,7 @@ const AddSessionModal = ({
                                 setSelectedLocation(null);
                                 setRoomNumber('');
                                 setTemporaryExpiryTime(new Date());
+                                setSelectedExpiryTime(null);
                             }}
                         />
                     </View>

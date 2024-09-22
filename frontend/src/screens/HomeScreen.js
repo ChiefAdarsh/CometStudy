@@ -13,7 +13,7 @@ const HomeScreen = ({ navigation }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password }), // Send username and password
+                body: JSON.stringify({ username, password }),
             });
 
             const contentType = response.headers.get('content-type');
@@ -22,7 +22,7 @@ const HomeScreen = ({ navigation }) => {
                 if (response.ok) {
                     const token = data.token;
                     await AsyncStorage.setItem('token', token);
-                    navigation.navigate('Map'); // Navigate to Map after successful login
+                    navigation.navigate('MainApp'); // Navigate to MainApp which contains the tab navigator
                 } else {
                     Alert.alert('Login Failed', data.message);
                 }
