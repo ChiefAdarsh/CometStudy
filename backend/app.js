@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -7,16 +8,16 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // To parse incoming JSON requests
+app.use(express.json());
 
-// MongoDB connection (replace with your MongoDB URI)
-const mongoURI = 'mongodb+srv://adarshgoura05:EOmGeNavUFsUqhCP@cluster0.eke0c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+// MongoDB connection
+const mongoURI = process.env.MONGO_URI;
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.error('Error connecting to MongoDB:', err));
 
 // Secret key for JWT
-const JWT_SECRET = 'your_jwt_secret_key';  // Use a secure environment variable for this in production
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Mongoose User schema and model
 const userSchema = new mongoose.Schema({
@@ -38,54 +39,38 @@ const sessionSchema = new mongoose.Schema({
 
 const Session = mongoose.model('Session', sessionSchema);
 
-// POST /register - Register a new user
-app.post('/register', async (req, res) => {
-    const { username, password } = req.body;
-
-    // Check if the user already exists
-    const userExists = await User.findOne({ username });
-    if (userExists) {
-        return res.status(400).json({ message: 'User already exists' });
-    }
-
-    // Hash the password and save the user
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, password: hashedPassword });
-
-    try {
-        await newUser.save();
-        res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error registering user', error });
-    }
-});
-
 // POST /login - Login a user
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
-    // Find the user by username
-    const user = await User.findOne({ username });
-    if (!user) {
-        return res.status(400).json({ message: 'Invalid username or password' });
-    }
+    try {
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid username or password' });
+        }
 
-    // Compare password with the hashed password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-        return res.status(400).json({ message: 'Invalid username or password' });
-    }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).json({ message: 'Invalid username or password' });
+        }
 
-    // Generate a JWT token
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ message: 'Login successful', token });
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+        res.status(200).json({ message: 'Login successful', token });
+    } catch (error) {
+        res.status(500).json({ message: 'Error logging in', error });
+    }
 });
 
 // Middleware to authenticate using JWT
 const authenticate = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1]; // Extract token from the Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ message: 'Access denied, no token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
     if (!token) {
-        return res.status(401).json({ message: 'Access denied' });
+        return res.status(401).json({ message: 'Access denied, malformed token' });
     }
 
     try {
@@ -93,7 +78,7 @@ const authenticate = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        return res.status(401).json({ message: 'Invalid token' });
+        return res.status(401).json({ message: 'Invalid or expired token' });
     }
 };
 
@@ -101,9 +86,10 @@ const authenticate = (req, res, next) => {
 app.post('/sessions', authenticate, async (req, res) => {
     const { id, latitude, longitude, name, roomNumber, expiryTime } = req.body;
 
-    // Validate request body
+    console.log('Received Session Data:', req.body);  // Log the incoming session data
+
     if (!id || !latitude || !longitude || !name || !roomNumber || !expiryTime) {
-        return res.status(400).json({ error: 'Invalid session data' });
+        return res.status(400).json({ error: 'Invalid session data. All fields are required.' });
     }
 
     try {
@@ -116,36 +102,21 @@ app.post('/sessions', authenticate, async (req, res) => {
             expiryTime
         });
 
-        // Save the session to MongoDB
         await newSession.save();
         res.status(201).json(newSession);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to add session' });
+        console.error('Failed to add session:', error);
+        res.status(500).json({ error: 'Failed to add session due to an internal error.' });
     }
 });
 
-// GET /sessions - Get all study sessions (authenticated)
+// GET /sessions - Fetch all study sessions (authenticated)
 app.get('/sessions', authenticate, async (req, res) => {
     try {
-        const sessions = await Session.find(); // Fetch all sessions from MongoDB
+        const sessions = await Session.find();
         res.json(sessions);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch sessions' });
-    }
-});
-
-// DELETE /sessions/:id - Delete a study session (authenticated)
-app.delete('/sessions/:id', authenticate, async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const session = await Session.findOneAndDelete({ id });
-        if (!session) {
-            return res.status(404).json({ error: 'Session not found' });
-        }
-        res.json(session);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to delete session' });
+        res.status(500).json({ message: 'Failed to fetch sessions' });
     }
 });
 

@@ -18,6 +18,7 @@ import { decodePolyline } from '../utils/polylineDecoder';
 import { utdBuildings } from './utdBuildings';
 
 const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4'; // Replace with your API key
+
 const BACKEND_URL = 'http://10.122.152.209:8000'; // Update with your backend URL
 
 const MapScreen = () => {
@@ -84,7 +85,12 @@ const MapScreen = () => {
 
     const handleAddSession = async (newSession) => {
         try {
-            const token = await AsyncStorage.getItem('token');  // Get token from AsyncStorage
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('No token found. Please log in again.');
+            }
+
+            console.log('Token being sent:', token);  // Log the token to check if it's there
 
             const response = await fetch(`${BACKEND_URL}/sessions`, {
                 method: 'POST',
@@ -92,20 +98,31 @@ const MapScreen = () => {
                     'Authorization': `Bearer ${token}`,  // Attach token to the Authorization header
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(newSession),
+                body: JSON.stringify({
+                    id: Date.now().toString(),
+                    latitude: newSession.selectedLocation.latitude,
+                    longitude: newSession.selectedLocation.longitude,
+                    name: newSession.newSessionName,
+                    roomNumber: newSession.roomNumber,
+                    expiryTime: new Date(newSession.temporaryExpiryTime).toISOString(),  // Format the date to ISO
+                }),
             });
 
             if (response.ok) {
                 const session = await response.json();
+                console.log('Session successfully added:', session);
                 setMarkerCoords((prev) => [...prev, session]);
             } else {
-                Alert.alert('Error', 'Unable to add study session');
+                const errorData = await response.json();
+                console.error('Error Data:', errorData);
+                throw new Error(errorData.error || 'Failed to add session.');
             }
         } catch (error) {
-            Alert.alert('Error', 'Unable to add study session. Please try again later.');
+            Alert.alert('Error', error.message || 'Unable to add study session. Please try again later.');
         }
     };
 
+    
     const getDirections = async (destination) => {
         const origin = `${userLocation.latitude},${userLocation.longitude}`;
         const dest = `${destination.latitude},${destination.longitude}`;

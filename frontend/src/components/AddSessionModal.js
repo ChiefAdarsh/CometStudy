@@ -125,12 +125,15 @@ const AddSessionModal = ({
                             title="Add Study Session"
                             onPress={() => {
                                 if (selectedLocation && newSessionName && roomNumber && temporaryExpiryTime) {
-                                    handleAddSession({
+                                    const sessionData = {
                                         newSessionName,
                                         selectedLocation,
                                         roomNumber,
                                         temporaryExpiryTime,
-                                    });
+                                    };
+                                    console.log('Session Data to be sent:', sessionData);  // Log the session data
+
+                                    handleAddSession(sessionData);
                                     setModalVisible(false);
                                     setNewSessionName('');
                                     setSelectedLocation(null);

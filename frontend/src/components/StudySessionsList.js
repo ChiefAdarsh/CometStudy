@@ -10,10 +10,16 @@ const StudySessionsList = ({ filteredMarkers, getDirections, handleDelete }) => 
             <Text style={styles.studyTitle}>Available Study Sessions</Text>
             <ScrollView>
                 {filteredMarkers.map((marker) => {
-                    const timeRemaining = marker.expiryTime - Date.now();
-                    const minutesRemaining = Math.max(Math.ceil(timeRemaining / 60000), 0);
+                    // Convert the expiryTime to a Date object
+                    const expiryTime = new Date(marker.expiryTime);
+
+                    // Calculate the time difference between now and the expiry time
+                    const currentTime = new Date();
+                    const timeRemaining = expiryTime - currentTime;
+                    const minutesRemaining = Math.max(Math.ceil(timeRemaining / 60000), 0); // Convert milliseconds to minutes
                     const hours = Math.floor(minutesRemaining / 60);
                     const minutes = minutesRemaining % 60;
+
                     return (
                         <TouchableOpacity key={marker.id} onPress={() => getDirections(marker)}>
                             <View style={styles.locationItem}>
@@ -35,5 +41,4 @@ const StudySessionsList = ({ filteredMarkers, getDirections, handleDelete }) => 
         </View>
     );
 };
-
 export default StudySessionsList;
