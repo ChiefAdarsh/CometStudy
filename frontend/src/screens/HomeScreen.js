@@ -13,52 +13,55 @@ const HomeScreen = ({ navigation }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ username, password }), // Send username and password
             });
 
-            // Check if the response is JSON
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await response.json();
-                console.log(data);
                 if (response.ok) {
-                    // Process the data
                     const token = data.token;
                     await AsyncStorage.setItem('token', token);
-                    navigation.navigate('Map');
+                    navigation.navigate('Map'); // Navigate to Map after successful login
                 } else {
                     Alert.alert('Login Failed', data.message);
                 }
             } else {
-                console.log('Response is not JSON:', response);
                 Alert.alert('Error', 'Invalid response from server');
             }
         } catch (error) {
-            console.error('Error:', error);
             Alert.alert('Error', 'Unable to login. Please try again later.');
         }
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Login to CometRoute</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                <Text style={styles.buttonText}>Login</Text>
-            </TouchableOpacity>
+            <Text style={styles.title}>CometStudy</Text>
+
+            <View style={styles.formContainer}>
+                <Text style={styles.label}>Username</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Enter username..."
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                />
+
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Enter password..."
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                />
+
+                <TouchableOpacity style={styles.button} onPress={handleLogin}>
+                    <Text style={styles.buttonText}>Log In</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -68,36 +71,48 @@ export default HomeScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#282C34',
+        backgroundColor: '#FFF',
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 16,
     },
     title: {
         fontSize: 36,
-        color: '#61DAFB',
+        fontWeight: 'bold',
+        color: '#0066CC',
         marginBottom: 40,
+    },
+    formContainer: {
+        width: '100%',
+        padding: 20,
+        borderColor: '#333',
+        borderWidth: 2,
+        borderRadius: 10,
+        backgroundColor: '#f9f9f9',
+    },
+    label: {
+        fontSize: 16,
+        color: '#333',
+        marginBottom: 5,
     },
     input: {
         width: '100%',
         height: 50,
-        borderColor: '#61DAFB',
+        borderColor: '#333',
         borderWidth: 1,
-        borderRadius: 10,
+        borderRadius: 5,
         paddingHorizontal: 10,
         marginBottom: 20,
-        color: '#FFF',
+        fontSize: 16,
     },
     button: {
-        backgroundColor: '#61DAFB',
+        backgroundColor: '#007AFF',
         paddingVertical: 15,
-        paddingHorizontal: 40,
-        borderRadius: 30,
-        width: '100%',
+        borderRadius: 5,
         alignItems: 'center',
     },
     buttonText: {
-        fontSize: 24,
-        color: '#282C34',
+        fontSize: 18,
+        color: '#FFF',
     },
 });

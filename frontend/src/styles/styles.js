@@ -136,4 +136,14 @@ export const styles = StyleSheet.create({
         fontSize: 16,
         marginRight: 10,
     },
+    customHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingTop: 10,
+        paddingBottom: 5,
+        backgroundColor: '#fff',
+        elevation: 3,
+    },
 });

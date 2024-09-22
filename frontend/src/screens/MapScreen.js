@@ -17,11 +17,9 @@ import { styles } from '../styles/styles';
 import { decodePolyline } from '../utils/polylineDecoder';
 import { utdBuildings } from './utdBuildings';
 
-const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4'; // Replace with your API key
+const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4';  // Replace with your valid API key
 
-const BACKEND_URL = 'http://10.122.152.209:8000'; // Update with your backend URL
-
-const MapScreen = () => {
+const MapScreen = ({ navigation }) => {
     const [markerCoords, setMarkerCoords] = useState([]);
     const [region, setRegion] = useState({
         latitude: 32.9867,
@@ -58,14 +56,13 @@ const MapScreen = () => {
     }, []);
 
     useEffect(() => {
-        // Fetch study sessions from the backend
         const fetchSessions = async () => {
             try {
-                const token = await AsyncStorage.getItem('token');  // Get token from AsyncStorage
-                const response = await fetch(`${BACKEND_URL}/sessions`, {
+                const token = await AsyncStorage.getItem('token');
+                const response = await fetch(`http://10.122.152.209:8000/sessions`, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${token}`,  // Attach token to the Authorization header
+                        'Authorization': `Bearer ${token}`,
                     },
                 });
 
@@ -86,16 +83,10 @@ const MapScreen = () => {
     const handleAddSession = async (newSession) => {
         try {
             const token = await AsyncStorage.getItem('token');
-            if (!token) {
-                throw new Error('No token found. Please log in again.');
-            }
-
-            console.log('Token being sent:', token);  // Log the token to check if it's there
-
-            const response = await fetch(`${BACKEND_URL}/sessions`, {
+            const response = await fetch(`http://10.122.152.209:8000/sessions`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,  // Attach token to the Authorization header
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
@@ -104,17 +95,15 @@ const MapScreen = () => {
                     longitude: newSession.selectedLocation.longitude,
                     name: newSession.newSessionName,
                     roomNumber: newSession.roomNumber,
-                    expiryTime: new Date(newSession.temporaryExpiryTime).toISOString(),  // Format the date to ISO
+                    expiryTime: new Date(newSession.temporaryExpiryTime).toISOString(),
                 }),
             });
 
             if (response.ok) {
                 const session = await response.json();
-                console.log('Session successfully added:', session);
                 setMarkerCoords((prev) => [...prev, session]);
             } else {
                 const errorData = await response.json();
-                console.error('Error Data:', errorData);
                 throw new Error(errorData.error || 'Failed to add session.');
             }
         } catch (error) {
@@ -122,7 +111,6 @@ const MapScreen = () => {
         }
     };
 
-    
     const getDirections = async (destination) => {
         const origin = `${userLocation.latitude},${userLocation.longitude}`;
         const dest = `${destination.latitude},${destination.longitude}`;
@@ -131,35 +119,40 @@ const MapScreen = () => {
         try {
             const response = await fetch(apiUrl);
             const data = await response.json();
-            if (data.routes.length > 0) {
+
+            if (data.routes && data.routes.length > 0) {
                 const points = decodePolyline(data.routes[0].overview_polyline.points);
                 setDirectionsPath(points);
+
                 mapRef.current.fitToCoordinates(points, {
                     edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
                     animated: true,
                 });
+            } else {
+                console.error("No routes found or an error occurred:", data);
             }
         } catch (error) {
             console.error("Error fetching directions:", error);
         }
     };
 
-    const handleDelete = (id) => {
-        // Send DELETE request to backend
-        fetch(`${BACKEND_URL}/sessions/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`,  // Attach token to the Authorization header
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
+    const handleDelete = async (id) => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            const response = await fetch(`http://10.122.152.209:8000/sessions/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
                 const updatedMarkers = markerCoords.filter((marker) => marker.id !== id);
                 setMarkerCoords(updatedMarkers);
-            })
-            .catch(error => {
-                console.error('Error deleting study session:', error);
-            });
+            }
+        } catch (error) {
+            console.error('Error deleting study session:', error);
+        }
     };
 
     const filteredMarkers = markerCoords.filter((marker) =>
@@ -186,7 +179,7 @@ const MapScreen = () => {
             >
                 {filteredMarkers.map((coord) => (
                     <Marker key={coord.id} coordinate={coord}>
-                        <Callout>
+                        <Callout onPress={() => getDirections(coord)}>
                             <View style={styles.calloutView}>
                                 <Text style={styles.calloutTitle}>{coord.name}</Text>
                                 <Text style={styles.calloutText}>Room: {coord.roomNumber}</Text>
