@@ -1,43 +1,41 @@
-// backend/app.js
-
+// app.js
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-
 const app = express();
-const PORT = 8000;
+const cors = require('cors');
 
-// Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-// In-memory storage for pins (for now, use a database like MongoDB for production)
-let pins = [];
+let studySessions = [];
 
-// Get all pins
-app.get('/pins', (req, res) => {
-    res.json(pins);
+// GET /sessions - Get all study sessions
+app.get('/sessions', (req, res) => {
+    res.json(studySessions);
 });
 
-// Add a new pin
-app.post('/pins', (req, res) => {
-    const { latitude, longitude, name } = req.body;
-    const newPin = { latitude, longitude, name };
-    pins.push(newPin);
-    res.status(201).json(newPin);
-});
-
-// Delete a pin
-app.delete('/pins/:index', (req, res) => {
-    const index = req.params.index;
-    if (index < 0 || index >= pins.length) {
-        return res.status(404).json({ error: 'Invalid index' });
+// POST /sessions - Add a new study session
+app.post('/sessions', (req, res) => {
+    const newSession = req.body;
+    if (!newSession.id || !newSession.latitude || !newSession.longitude || !newSession.name || !newSession.roomNumber || !newSession.expiryTime) {
+        return res.status(400).json({ error: 'Invalid session data' });
     }
-    const removedPin = pins.splice(index, 1);
-    res.status(200).json(removedPin);
+    studySessions.push(newSession);
+    res.status(201).json(newSession);
+});
+
+// DELETE /sessions/:id - Delete a study session
+app.delete('/sessions/:id', (req, res) => {
+    const id = req.params.id;
+    const index = studySessions.findIndex(session => session.id === id);
+    if (index === -1) {
+        return res.status(404).json({ error: 'Session not found' });
+    }
+    const deletedSession = studySessions.splice(index, 1);
+    res.json(deletedSession[0]);
 });
 
 // Start the server
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
