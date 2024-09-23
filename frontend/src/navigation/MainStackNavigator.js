@@ -1,3 +1,5 @@
+// navigation/MainStackNavigator.js
+
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'; // Import Bottom Tab Navigator
@@ -6,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons'; // Icons for the bottom tabs
 import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import SignupScreen from '../screens/SignupScreen'; // Import the SignupScreen
 
 // Stack navigator for the home/login screen
 const Stack = createStackNavigator();
@@ -45,6 +48,11 @@ const MainStackNavigator = () => {
                 name="Home"
                 component={HomeScreen}
                 options={{ headerShown: false }} // Hide header for HomeScreen
+            />
+            <Stack.Screen
+                name="Signup"
+                component={SignupScreen}
+                options={{ headerShown: false }} // Hide header for SignupScreen
             />
             <Stack.Screen
                 name="MainApp" // The main app screen with the tab navigator

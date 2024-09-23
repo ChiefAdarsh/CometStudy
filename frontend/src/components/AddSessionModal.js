@@ -25,7 +25,7 @@ const AddSessionModal = ({
     const [newSessionName, setNewSessionName] = useState('');
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [roomNumber, setRoomNumber] = useState('');
-    const [temporaryExpiryTime, setTemporaryExpiryTime] = useState(new Date());
+    const [temporaryExpiryTime, setTemporaryExpiryTime] = useState(new Date(Date.now() + 3600000));
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedExpiryTime, setSelectedExpiryTime] = useState(null);
 

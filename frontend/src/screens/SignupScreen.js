@@ -1,4 +1,4 @@
-// screens/HomeScreen.js
+// screens/SignupScreen.js
 
 import React, { useState } from 'react';
 import {
@@ -11,13 +11,19 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const HomeScreen = ({ navigation }) => {
+const SignupScreen = ({ navigation }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
-    const handleLogin = async () => {
+    const handleSignup = async () => {
+        if (password !== confirmPassword) {
+            Alert.alert('Error', 'Passwords do not match');
+            return;
+        }
+
         try {
-            const response = await fetch('http://10.122.152.209:8000/login', {
+            const response = await fetch('http://10.122.152.209:8000/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -25,27 +31,22 @@ const HomeScreen = ({ navigation }) => {
                 body: JSON.stringify({ username, password }),
             });
 
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const data = await response.json();
-                if (response.ok) {
-                    const token = data.token;
-                    await AsyncStorage.setItem('token', token);
-                    navigation.navigate('MainApp'); // Navigate to MainApp which contains the tab navigator
-                } else {
-                    Alert.alert('Login Failed', data.message);
-                }
+            const data = await response.json();
+            if (response.ok) {
+                const token = data.token;
+                await AsyncStorage.setItem('token', token);
+                navigation.navigate('MainApp'); // Navigate to the main app
             } else {
-                Alert.alert('Error', 'Invalid response from server');
+                Alert.alert('Signup Failed', data.message);
             }
         } catch (error) {
-            Alert.alert('Error', 'Unable to login. Please try again later.');
+            Alert.alert('Error', 'Unable to sign up. Please try again later.');
         }
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>CometStudy</Text>
+            <Text style={styles.title}>Sign Up</Text>
 
             <View style={styles.formContainer}>
                 <Text style={styles.label}>Username</Text>
@@ -67,19 +68,29 @@ const HomeScreen = ({ navigation }) => {
                     autoCapitalize="none"
                 />
 
-                <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                    <Text style={styles.buttonText}>Log In</Text>
+                <Text style={styles.label}>Confirm Password</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Confirm password..."
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                />
+
+                <TouchableOpacity style={styles.button} onPress={handleSignup}>
+                    <Text style={styles.buttonText}>Sign Up</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                    <Text style={styles.signupText}>Don't have an account? Sign up</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+                    <Text style={styles.loginText}>Already have an account? Log in</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 };
 
-export default HomeScreen;
+export default SignupScreen;
 
 const styles = StyleSheet.create({
     container: {
@@ -128,7 +139,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#FFF',
     },
-    signupText: {
+    loginText: {
         marginTop: 20,
         color: '#007AFF',
         textAlign: 'center',
