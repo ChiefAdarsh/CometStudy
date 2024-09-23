@@ -110,6 +110,58 @@ app.post('/sessions', authenticate, async (req, res) => {
     }
 });
 
+// server.js
+
+// DELETE /sessions/:id - Delete a study session (authenticated)
+app.delete('/sessions/:id', authenticate, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await Session.deleteOne({ id: id });
+
+        if (result.deletedCount === 1) {
+            res.status(200).json({ message: 'Session deleted successfully' });
+        } else {
+            res.status(404).json({ message: 'Session not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting session:', error);
+        res.status(500).json({ message: 'Failed to delete session', error });
+    }
+});
+
+app.post('/signup', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        // Check if the username is already taken
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username is already taken' });
+        }
+
+        // Hash the password before saving it to the database
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create a new user
+        const newUser = new User({
+            username,
+            password: hashedPassword,
+        });
+
+        // Save the user to the database
+        await newUser.save();
+
+        // Optionally, generate a JWT token for immediate login
+        const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, { expiresIn: '1h' });
+
+        res.status(201).json({ message: 'User registered successfully', token });
+    } catch (error) {
+        console.error('Error registering new user:', error);
+        res.status(500).json({ message: 'Failed to register user', error });
+    }
+});
+
 // GET /sessions - Fetch all study sessions (authenticated)
 app.get('/sessions', authenticate, async (req, res) => {
     try {

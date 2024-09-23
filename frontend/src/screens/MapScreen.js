@@ -136,6 +136,7 @@ const MapScreen = ({ navigation }) => {
         }
     };
 
+    // MapScreen.js
     const handleDelete = async (id) => {
         try {
             const token = await AsyncStorage.getItem('token');
@@ -147,11 +148,17 @@ const MapScreen = ({ navigation }) => {
             });
 
             if (response.ok) {
+                // Update the markerCoords state
                 const updatedMarkers = markerCoords.filter((marker) => marker.id !== id);
                 setMarkerCoords(updatedMarkers);
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to delete session:', errorData);
+                Alert.alert('Error', errorData.message || 'Failed to delete session');
             }
         } catch (error) {
             console.error('Error deleting study session:', error);
+            Alert.alert('Error', 'Failed to delete session due to an internal error.');
         }
     };
 
