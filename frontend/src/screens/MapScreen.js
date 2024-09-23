@@ -1,5 +1,3 @@
-// screens/MapScreen.js
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
@@ -19,7 +17,7 @@ import { styles } from '../styles/styles';
 import { decodePolyline } from '../utils/polylineDecoder';
 import { utdBuildings } from './utdBuildings';
 
-const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'; // Replace with your API key
+const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4'; // Replace with your API key
 
 const MapScreen = ({ navigation }) => {
     const [markerCoords, setMarkerCoords] = useState([]);
@@ -35,8 +33,8 @@ const MapScreen = ({ navigation }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [searchText, setSearchText] = useState('');
 
-    // Keep isEditMode state here
-    const [isEditMode, setIsEditMode] = useState(false);
+    // State to track if the user has an active session
+    const [hasActiveSession, setHasActiveSession] = useState(false);
 
     const mapRef = useRef(null);
 
@@ -64,6 +62,11 @@ const MapScreen = ({ navigation }) => {
         const fetchSessions = async () => {
             try {
                 const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    Alert.alert('Error', 'No token found, please log in again.');
+                    return;
+                }
+
                 const response = await fetch(`http://10.122.152.209:8000/sessions`, {
                     method: 'GET',
                     headers: {
@@ -71,14 +74,23 @@ const MapScreen = ({ navigation }) => {
                     },
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    setMarkerCoords(data);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to fetch study sessions.');
+                }
+
+                const { allSessions, activeSession } = await response.json();
+                setMarkerCoords(allSessions);  // Update state with all sessions
+
+                // If the user has an active session, set the state
+                if (activeSession) {
+                    setHasActiveSession(true);
                 } else {
-                    Alert.alert('Error', 'Unable to fetch study sessions');
+                    setHasActiveSession(false);
                 }
             } catch (error) {
-                Alert.alert('Error', 'Unable to fetch study sessions. Please try again later.');
+                console.error('Error fetching study sessions:', error);
+                Alert.alert('Error', error.message || 'Unable to fetch study sessions.');
             }
         };
 
@@ -107,6 +119,7 @@ const MapScreen = ({ navigation }) => {
             if (response.ok) {
                 const session = await response.json();
                 setMarkerCoords((prev) => [...prev, session]);
+                setHasActiveSession(true);  // Set active session after successfully adding a session
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to add session.');
@@ -154,6 +167,7 @@ const MapScreen = ({ navigation }) => {
             if (response.ok) {
                 const updatedMarkers = markerCoords.filter((marker) => marker.id !== id);
                 setMarkerCoords(updatedMarkers);
+                setHasActiveSession(false); // Allow the user to add a new session after deletion
             } else {
                 const errorData = await response.json();
                 console.error('Failed to delete session:', errorData);
@@ -163,11 +177,6 @@ const MapScreen = ({ navigation }) => {
             console.error('Error deleting study session:', error);
             Alert.alert('Error', 'Failed to delete session due to an internal error.');
         }
-    };
-
-    // Function to toggle edit mode
-    const toggleEditMode = () => {
-        setIsEditMode((prev) => !prev);
     };
 
     const filteredMarkers = markerCoords.filter((marker) =>
@@ -227,11 +236,12 @@ const MapScreen = ({ navigation }) => {
                 placeholderTextColor="#888"
             />
 
-            <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-                <Ionicons name="add-circle" size={80} color="#007AFF" />
-            </TouchableOpacity>
-
-            {/* Removed the edit button from the bottom right corner */}
+            {/* Conditionally render the Add button based on active session */}
+            {!hasActiveSession && (
+                <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+                    <Ionicons name="add-circle" size={80} color="#007AFF" />
+                </TouchableOpacity>
+            )}
 
             <AddSessionModal
                 modalVisible={modalVisible}
@@ -244,8 +254,6 @@ const MapScreen = ({ navigation }) => {
                 filteredMarkers={filteredMarkers}
                 getDirections={getDirections}
                 handleDelete={handleDelete}
-                isEditMode={isEditMode} // Pass edit mode state
-                toggleEditMode={toggleEditMode} // Pass function to toggle edit mode
             />
         </View>
     );

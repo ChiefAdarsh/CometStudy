@@ -12,7 +12,7 @@ export const styles = StyleSheet.create({
     },
     addButton: {
         position: 'absolute',
-        bottom: 15,
+        bottom: 10,
         right: 20,
         zIndex: 2,
     },

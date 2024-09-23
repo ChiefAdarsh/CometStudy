@@ -29,17 +29,40 @@ const User = mongoose.model('User', userSchema);
 
 // Mongoose Session schema and model
 const sessionSchema = new mongoose.Schema({
-    id: { type: String, required: true },
-    latitude: { type: Number, required: true },
-    longitude: { type: Number, required: true },
-    name: { type: String, required: true },
-    roomNumber: { type: String, required: true },
-    expiryTime: { type: Date, required: true }
+    id: {
+        type: String,
+        required: true,
+    },
+    latitude: {
+        type: Number,
+        required: true,
+    },
+    longitude: {
+        type: Number,
+        required: true,
+    },
+    name: {
+        type: String,
+        required: true,
+    },
+    roomNumber: {
+        type: String,
+        required: true,
+    },
+    expiryTime: {
+        type: Date,
+        required: true,
+    },
+    userId: {  // Make sure userId is part of the schema
+        type: mongoose.Schema.Types.ObjectId,  // Reference the User model
+        ref: 'User',
+        required: true,  // Ensure that every session must have a user associated
+    },
 });
 
 const Session = mongoose.model('Session', sessionSchema);
 
-// POST /login - Login a user
+
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -54,6 +77,7 @@ app.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid username or password' });
         }
 
+        // Sign a JWT with userId and return it
         const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
         res.status(200).json({ message: 'Login successful', token });
     } catch (error) {
@@ -61,7 +85,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Middleware to authenticate using JWT
+
 const authenticate = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -74,32 +98,38 @@ const authenticate = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
+        const decoded = jwt.verify(token, JWT_SECRET);  // Ensure JWT contains userId
+        req.user = decoded;  // Attach the decoded JWT payload to req.user (including userId)
         next();
     } catch (error) {
         return res.status(401).json({ message: 'Invalid or expired token' });
     }
 };
 
-// POST /sessions - Add a new study session (authenticated)
 app.post('/sessions', authenticate, async (req, res) => {
     const { id, latitude, longitude, name, roomNumber, expiryTime } = req.body;
-
-    console.log('Received Session Data:', req.body);  // Log the incoming session data
-
-    if (!id || !latitude || !longitude || !name || !roomNumber || !expiryTime) {
-        return res.status(400).json({ error: 'Invalid session data. All fields are required.' });
-    }
+    const userId = req.user.userId;  // Get userId from the authenticated user
 
     try {
+        // Check if the user already has an active session
+        const existingSession = await Session.findOne({
+            userId: userId,
+            expiryTime: { $gt: new Date() }  // Check for non-expired session
+        });
+
+        if (existingSession) {
+            return res.status(400).json({ error: 'You already have an active study session.' });
+        }
+
+        // Create new session associated with the userId
         const newSession = new Session({
             id,
             latitude,
             longitude,
             name,
             roomNumber,
-            expiryTime
+            expiryTime,
+            userId: userId  // Associate session with the user
         });
 
         await newSession.save();
@@ -164,14 +194,24 @@ app.post('/signup', async (req, res) => {
 
 // GET /sessions - Fetch all study sessions (authenticated)
 app.get('/sessions', authenticate, async (req, res) => {
+    const userId = req.user.userId;  // Get the userId from the JWT
+
     try {
-        const sessions = await Session.find();
-        res.json(sessions);
+        // Fetch all sessions for display purposes
+        const allSessions = await Session.find();
+
+        // Check if the logged-in user has an active (non-expired) session
+        const activeSession = await Session.findOne({
+            userId: userId,
+            expiryTime: { $gt: new Date() }  // Check for non-expired session
+        });
+
+        res.json({ allSessions, activeSession });
     } catch (error) {
+        console.error('Error fetching sessions:', error);
         res.status(500).json({ message: 'Failed to fetch sessions' });
     }
 });
-
 // Start the server
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
