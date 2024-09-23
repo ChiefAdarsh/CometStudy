@@ -142,18 +142,28 @@ app.post('/sessions', authenticate, async (req, res) => {
 
 // server.js
 
-// DELETE /sessions/:id - Delete a study session (authenticated)
+
+
 app.delete('/sessions/:id', authenticate, async (req, res) => {
     const { id } = req.params;
+    const userId = req.user.userId;  // Get the logged-in user's ID from JWT
 
     try {
-        const result = await Session.deleteOne({ id: id });
+        // Find the session to delete
+        const session = await Session.findOne({ id });
 
-        if (result.deletedCount === 1) {
-            res.status(200).json({ message: 'Session deleted successfully' });
-        } else {
-            res.status(404).json({ message: 'Session not found' });
+        if (!session) {
+            return res.status(404).json({ message: 'Session not found' });
         }
+
+        // Check if the session belongs to the logged-in user
+        if (session.userId.toString() !== userId) {
+            return res.status(403).json({ message: 'You can only delete your own session' });
+        }
+
+        // Delete the session
+        await Session.deleteOne({ id });
+        res.status(200).json({ message: 'Session deleted successfully' });
     } catch (error) {
         console.error('Error deleting session:', error);
         res.status(500).json({ message: 'Failed to delete session', error });

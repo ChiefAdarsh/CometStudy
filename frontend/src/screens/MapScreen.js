@@ -157,6 +157,16 @@ const MapScreen = ({ navigation }) => {
     const handleDelete = async (id) => {
         try {
             const token = await AsyncStorage.getItem('token');
+
+            // Check if the session exists in the state before attempting deletion
+            const sessionToDelete = markerCoords.find((marker) => marker.id === id);
+
+            if (!sessionToDelete) {
+                Alert.alert('Error', 'Session not found in frontend state');
+                return;  // Exit if the session isn't found in the state
+            }
+
+            // Make the DELETE request to the backend
             const response = await fetch(`http://10.122.152.209:8000/sessions/${id}`, {
                 method: 'DELETE',
                 headers: {
@@ -165,19 +175,30 @@ const MapScreen = ({ navigation }) => {
             });
 
             if (response.ok) {
+                // Remove the deleted session from the markerCoords state
                 const updatedMarkers = markerCoords.filter((marker) => marker.id !== id);
                 setMarkerCoords(updatedMarkers);
-                setHasActiveSession(false); // Allow the user to add a new session after deletion
+
+                // Check if the deleted session belonged to the logged-in user
+                const user = await AsyncStorage.getItem('user');
+                const { userId } = JSON.parse(user);
+
+                // Only update the active session if the logged-in user created the deleted session
+                if (sessionToDelete.userId === userId) {
+                    setHasActiveSession(false);  // Allow the user to add a new session
+                }
             } else {
                 const errorData = await response.json();
-                console.error('Failed to delete session:', errorData);
+                //console.error('Failed to delete session:', errorData);
                 Alert.alert('Error', errorData.message || 'Failed to delete session');
             }
         } catch (error) {
-            console.error('Error deleting study session:', error);
-            Alert.alert('Error', 'Failed to delete session due to an internal error.');
+            // console.error('Error deleting study session:', error);
+            // Alert.alert('Error', 'Failed to delete session due to an internal error.');
         }
     };
+
+
 
     const filteredMarkers = markerCoords.filter((marker) =>
         marker.name.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -201,7 +222,7 @@ const MapScreen = ({ navigation }) => {
                 region={region}
                 showsUserLocation={true}
             >
-                {filteredMarkers.map((coord) => (
+                {markerCoords.map((coord) => (
                     <Marker key={coord.id} coordinate={coord}>
                         <Callout onPress={() => getDirections(coord)}>
                             <View style={styles.calloutView}>
@@ -227,6 +248,8 @@ const MapScreen = ({ navigation }) => {
                     />
                 )}
             </MapView>
+
+            
 
             <TextInput
                 style={styles.topSearchInput}
