@@ -158,14 +158,6 @@ const MapScreen = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem('token');
 
-            // Check if the session exists in the state before attempting deletion
-            const sessionToDelete = markerCoords.find((marker) => marker.id === id);
-
-            if (!sessionToDelete) {
-                Alert.alert('Error', 'Session not found in frontend state');
-                return;  // Exit if the session isn't found in the state
-            }
-
             // Make the DELETE request to the backend
             const response = await fetch(`http://10.122.152.209:8000/sessions/${id}`, {
                 method: 'DELETE',
@@ -175,26 +167,28 @@ const MapScreen = ({ navigation }) => {
             });
 
             if (response.ok) {
-                // Remove the deleted session from the markerCoords state
+                // Remove the deleted session from the frontend state
                 const updatedMarkers = markerCoords.filter((marker) => marker.id !== id);
                 setMarkerCoords(updatedMarkers);
 
-                // Check if the deleted session belonged to the logged-in user
+                // Check if the deleted session belonged to the current user
                 const user = await AsyncStorage.getItem('user');
                 const { userId } = JSON.parse(user);
 
-                // Only update the active session if the logged-in user created the deleted session
-                if (sessionToDelete.userId === userId) {
-                    setHasActiveSession(false);  // Allow the user to add a new session
+                const deletedSession = markerCoords.find((marker) => marker.id === id);
+
+                // If the deleted session belonged to the logged-in user, set hasActiveSession to false
+                if (deletedSession && deletedSession.userId === userId) {
+                    setHasActiveSession(false);  // Re-enable the Add button for the user
                 }
             } else {
                 const errorData = await response.json();
                 //console.error('Failed to delete session:', errorData);
-                Alert.alert('Error', errorData.message || 'Failed to delete session');
+                //Alert.alert('Error', errorData.message || 'Failed to delete session');
             }
         } catch (error) {
-            // console.error('Error deleting study session:', error);
-            // Alert.alert('Error', 'Failed to delete session due to an internal error.');
+            //console.error('Error deleting study session:', error);
+            //Alert.alert('Error', 'Failed to delete session due to an internal error.');
         }
     };
 
@@ -249,7 +243,7 @@ const MapScreen = ({ navigation }) => {
                 )}
             </MapView>
 
-            
+
 
             <TextInput
                 style={styles.topSearchInput}
@@ -266,6 +260,7 @@ const MapScreen = ({ navigation }) => {
                 </TouchableOpacity>
             )}
 
+            {/* AddSessionModal */}
             <AddSessionModal
                 modalVisible={modalVisible}
                 setModalVisible={setModalVisible}
@@ -282,4 +277,4 @@ const MapScreen = ({ navigation }) => {
     );
 };
 
-export default MapScreen;
+export default MapScreen;  

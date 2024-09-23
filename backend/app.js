@@ -170,6 +170,27 @@ app.delete('/sessions/:id', authenticate, async (req, res) => {
     }
 });
 
+// Backend route to fetch the active session for the logged-in user
+app.get('/sessions/active', authenticate, async (req, res) => {
+    const userId = req.user.userId;
+
+    try {
+        const activeSession = await Session.findOne({
+            userId: userId,
+            expiryTime: { $gt: new Date() },  // Find non-expired sessions
+        });
+
+        if (!activeSession) {
+            return res.status(404).json({ message: 'No active session found' });
+        }
+
+        res.json(activeSession);
+    } catch (error) {
+        console.error('Error fetching active session:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 app.post('/signup', async (req, res) => {
     const { username, password } = req.body;
 

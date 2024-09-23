@@ -1,19 +1,17 @@
-// navigation/MainStackNavigator.js
+// src/navigation/MainStackNavigator.js
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'; // Import Bottom Tab Navigator
-import { Ionicons } from '@expo/vector-icons'; // Icons for the bottom tabs
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
 import SettingsScreen from '../screens/SettingsScreen';
-import SignupScreen from '../screens/SignupScreen'; // Import the SignupScreen
+import SignupScreen from '../screens/SignupScreen';
+import ActiveSessionScreen from '../screens/ActiveSessionScreen'; // Import the ActiveSessionScreen
 
-// Stack navigator for the home/login screen
 const Stack = createStackNavigator();
-
-// Tab navigator for the map and settings screens
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
@@ -27,15 +25,18 @@ const TabNavigator = () => {
                         iconName = 'map';
                     } else if (route.name === 'Settings') {
                         iconName = 'settings';
+                    } else if (route.name === 'ActiveSession') {
+                        iconName = 'information-circle';
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#007AFF',
                 tabBarInactiveTintColor: 'gray',
-                headerShown: false, // Hide headers for the tab screens
+                headerShown: false,
             })}
         >
             <Tab.Screen name="Map" component={MapScreen} />
+            <Tab.Screen name="ActiveSession" component={ActiveSessionScreen} options={{ title: 'Active Session' }} />
             <Tab.Screen name="Settings" component={SettingsScreen} />
         </Tab.Navigator>
     );
@@ -44,21 +45,9 @@ const TabNavigator = () => {
 const MainStackNavigator = () => {
     return (
         <Stack.Navigator initialRouteName="Home">
-            <Stack.Screen
-                name="Home"
-                component={HomeScreen}
-                options={{ headerShown: false }} // Hide header for HomeScreen
-            />
-            <Stack.Screen
-                name="Signup"
-                component={SignupScreen}
-                options={{ headerShown: false }} // Hide header for SignupScreen
-            />
-            <Stack.Screen
-                name="MainApp" // The main app screen with the tab navigator
-                component={TabNavigator}
-                options={{ headerShown: false }} // Hide header for the tab screens
-            />
+            <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="MainApp" component={TabNavigator} options={{ headerShown: false }} />
         </Stack.Navigator>
     );
 };
