@@ -1,4 +1,5 @@
 // styles/styles.js
+
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
@@ -11,7 +12,7 @@ export const styles = StyleSheet.create({
     },
     addButton: {
         position: 'absolute',
-        bottom: 25, // Change this value to move it further down
+        bottom: 15,
         right: 20,
         zIndex: 2,
     },
@@ -90,19 +91,35 @@ export const styles = StyleSheet.create({
         padding: 10,
         zIndex: -1,
     },
+    studyTitleContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
     studyTitle: {
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    editButtonText: {
+        fontSize: 16,
+        color: '#007AFF',
+    },
+    locationItemContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 10,
     },
+    deleteButton: {
+        marginRight: 10,
+    },
     locationItem: {
+        flex: 1,
         flexDirection: 'row',
         backgroundColor: '#fff',
         borderRadius: 10,
         padding: 10,
-        marginBottom: 10,
         elevation: 1,
-        justifyContent: 'space-between',
         alignItems: 'center',
     },
     locationTextContainer: {

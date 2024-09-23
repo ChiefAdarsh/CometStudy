@@ -1,3 +1,5 @@
+// screens/MapScreen.js
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
     View,
@@ -8,8 +10,8 @@ import {
     Alert,
 } from 'react-native';
 import MapView, { Marker, Callout, Polyline } from 'react-native-maps';
-import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AddSessionModal from '../components/AddSessionModal';
 import StudySessionsList from '../components/StudySessionsList';
@@ -17,7 +19,7 @@ import { styles } from '../styles/styles';
 import { decodePolyline } from '../utils/polylineDecoder';
 import { utdBuildings } from './utdBuildings';
 
-const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4';  // Replace with your valid API key
+const GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'; // Replace with your API key
 
 const MapScreen = ({ navigation }) => {
     const [markerCoords, setMarkerCoords] = useState([]);
@@ -32,6 +34,9 @@ const MapScreen = ({ navigation }) => {
     const [directionsPath, setDirectionsPath] = useState([]);
     const [modalVisible, setModalVisible] = useState(false);
     const [searchText, setSearchText] = useState('');
+
+    // Keep isEditMode state here
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const mapRef = useRef(null);
 
@@ -129,14 +134,13 @@ const MapScreen = ({ navigation }) => {
                     animated: true,
                 });
             } else {
-                console.error("No routes found or an error occurred:", data);
+                console.error('No routes found or an error occurred:', data);
             }
         } catch (error) {
-            console.error("Error fetching directions:", error);
+            console.error('Error fetching directions:', error);
         }
     };
 
-    // MapScreen.js
     const handleDelete = async (id) => {
         try {
             const token = await AsyncStorage.getItem('token');
@@ -148,7 +152,6 @@ const MapScreen = ({ navigation }) => {
             });
 
             if (response.ok) {
-                // Update the markerCoords state
                 const updatedMarkers = markerCoords.filter((marker) => marker.id !== id);
                 setMarkerCoords(updatedMarkers);
             } else {
@@ -160,6 +163,11 @@ const MapScreen = ({ navigation }) => {
             console.error('Error deleting study session:', error);
             Alert.alert('Error', 'Failed to delete session due to an internal error.');
         }
+    };
+
+    // Function to toggle edit mode
+    const toggleEditMode = () => {
+        setIsEditMode((prev) => !prev);
     };
 
     const filteredMarkers = markerCoords.filter((marker) =>
@@ -191,7 +199,11 @@ const MapScreen = ({ navigation }) => {
                                 <Text style={styles.calloutTitle}>{coord.name}</Text>
                                 <Text style={styles.calloutText}>Room: {coord.roomNumber}</Text>
                                 <Text style={styles.calloutText}>
-                                    Expires at: {new Date(coord.expiryTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    Expires at:{' '}
+                                    {new Date(coord.expiryTime).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}
                                 </Text>
                             </View>
                         </Callout>
@@ -219,6 +231,8 @@ const MapScreen = ({ navigation }) => {
                 <Ionicons name="add-circle" size={80} color="#007AFF" />
             </TouchableOpacity>
 
+            {/* Removed the edit button from the bottom right corner */}
+
             <AddSessionModal
                 modalVisible={modalVisible}
                 setModalVisible={setModalVisible}
@@ -230,6 +244,8 @@ const MapScreen = ({ navigation }) => {
                 filteredMarkers={filteredMarkers}
                 getDirections={getDirections}
                 handleDelete={handleDelete}
+                isEditMode={isEditMode} // Pass edit mode state
+                toggleEditMode={toggleEditMode} // Pass function to toggle edit mode
             />
         </View>
     );
