@@ -17,7 +17,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { styles } from '../styles/styles';
 import { courseList } from '../context/CourseList';
 
-const GOOGLE_API_KEY = 'AIzaSyAvGxdBp1HKySVrivYF8d5pt589O9K5hUY';
+const GOOGLE_API_KEY = 'AIzaSyAvGxdBp1HKySVrivYF8d5pt589O9K5hUY';  
 
 const AddSessionModal = ({
     modalVisible,
@@ -26,7 +26,7 @@ const AddSessionModal = ({
     utdBuildings,
 }) => {
     const [newSessionName, setNewSessionName] = useState('');
-    const [description, setDescription] = useState('');  // State for the description input
+    const [description, setDescription] = useState('');  
     const [filteredCourses, setFilteredCourses] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [roomNumber, setRoomNumber] = useState('');
@@ -104,7 +104,6 @@ const AddSessionModal = ({
                         onChangeText={handleCourseInput}
                     />
 
-                    {/* Styled autocomplete dropdown */}
                     {filteredCourses.length > 0 && (
                         <FlatList
                             style={customStyles.suggestionsList}
@@ -124,9 +123,8 @@ const AddSessionModal = ({
                         />
                     )}
 
-                    {/* New description input box with vertically centered placeholder text */}
                     <TextInput
-                        style={[styles.textInput, customStyles.descriptionInput]}  // Apply the custom styles
+                        style={[styles.textInput, customStyles.descriptionInput]} 
                         placeholder="Description (optional)"
                         value={description}
                         onChangeText={setDescription}
@@ -174,7 +172,7 @@ const AddSessionModal = ({
                                         newSessionName,
                                         selectedLocation,
                                         roomNumber,
-                                        description,
+                                        description,  
                                         temporaryExpiryTime: expiryTimeToUse,
                                     };
 
@@ -210,7 +208,7 @@ const AddSessionModal = ({
     );
 };
 
-// Custom styles for the dropdown
+
 const customStyles = StyleSheet.create({
     suggestionsList: {
         backgroundColor: '#ffffff',
@@ -231,10 +229,10 @@ const customStyles = StyleSheet.create({
         color: '#333',
     },
     descriptionInput: {
-        textAlignVertical: 'center',  // Centers text vertically
-        height: 40,                  // Adjust height for multiline input
-        paddingVertical: 10,          // Adjust padding for top and bottom
-        fontSize: 16,                 // Adjust font size for better readability
+        textAlignVertical: 'center', 
+        height: 40,                  
+        paddingVertical: 10,          
+        fontSize: 16,                
     },
 });
 

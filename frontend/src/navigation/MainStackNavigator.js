@@ -1,5 +1,3 @@
-// src/navigation/MainStackNavigator.js
-
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -9,7 +7,7 @@ import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SignupScreen from '../screens/SignupScreen';
-import ActiveSessionScreen from '../screens/ActiveSessionScreen'; // Import the ActiveSessionScreen
+import ActiveSessionScreen from '../screens/ActiveSessionScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -35,8 +33,8 @@ const TabNavigator = () => {
                 headerShown: false,
                 tabBarLabel: '',
                 tabBarStyle: {
-                    paddingBottom: 8, // Adjust the bottom padding to push icons down
-                    height: 70, // Optional: Increase the height of the tab bar
+                    paddingBottom: 8, 
+                    height: 70, 
                 },
             })}
         >

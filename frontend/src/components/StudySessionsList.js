@@ -6,12 +6,12 @@ import { styles } from '../styles/styles';
 const StudySessionsList = ({
     filteredMarkers,
     getDirections,
-    showCallout,  // Add showCallout prop
+    showCallout, 
     handleDelete,
 }) => {
     const [isEditMode, setIsEditMode] = useState(false);
 
-    // Function to confirm deletion
+    
     const confirmDelete = (id) => {
         Alert.alert('Delete Session', 'Are you sure you want to delete this session?', [
             { text: 'Cancel', style: 'cancel' },
@@ -24,7 +24,7 @@ const StudySessionsList = ({
             <View style={styles.studyTitleContainer}>
                 <Text style={styles.studyTitle}>Available Study Sessions</Text>
 
-                {/* Toggle Edit Mode */}
+               
                 <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)}>
                     <Text style={styles.editButtonText}>
                         {isEditMode ? 'Done' : 'Edit'}
@@ -34,16 +34,16 @@ const StudySessionsList = ({
 
             <ScrollView>
                 {filteredMarkers.map((marker) => {
-                    // Convert the expiryTime to a Date object
+                    
                     const expiryTime = new Date(marker.expiryTime);
 
-                    // Calculate the time difference between now and the expiry time
+                  
                     const currentTime = new Date();
                     const timeRemaining = expiryTime - currentTime;
                     const minutesRemaining = Math.max(
                         Math.ceil(timeRemaining / 60000),
                         0
-                    ); // Convert milliseconds to minutes
+                    ); 
                     const hours = Math.floor(minutesRemaining / 60);
                     const minutes = minutesRemaining % 60;
 
@@ -61,7 +61,7 @@ const StudySessionsList = ({
                                 style={styles.locationItem}
                                 onPress={() => {
                                     if (!isEditMode) {
-                                        showCallout(marker.id);  // Automatically show Callout
+                                        showCallout(marker.id); 
                                         getDirections(marker);
                                     }
                                 }}
@@ -74,6 +74,13 @@ const StudySessionsList = ({
                                     <Text style={styles.locationDetails}>
                                         Expires in: {hours}h {minutes}m
                                     </Text>
+
+                                  
+                                    {marker.description && (
+                                        <Text style={styles.locationDetails}>
+                                            Description: {marker.description}
+                                        </Text>
+                                    )}
                                 </View>
                             </TouchableOpacity>
                         </View>

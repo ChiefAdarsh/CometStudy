@@ -8,16 +8,16 @@ import MapView, { Marker } from 'react-native-maps';
 const ActiveSessionScreen = ({ navigation }) => {
     const [activeSession, setActiveSession] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [userId, setUserId] = useState(null); // Track the user ID
+    const [userId, setUserId] = useState(null); 
 
-    // Fetch the user ID from AsyncStorage
+   
     useEffect(() => {
         const fetchUserId = async () => {
             const storedUser = await AsyncStorage.getItem('user');
             if (storedUser) {
                 const parsedUser = JSON.parse(storedUser);
-                setUserId(parsedUser.userId); // Set userId to the logged-in user's ID
-            } else {
+                setUserId(parsedUser.userId); 
+
                 console.log('No user found in AsyncStorage.');
             }
         };
@@ -46,10 +46,8 @@ const ActiveSessionScreen = ({ navigation }) => {
             setLoading(false);
         }
     };
-
     
 
-    // Function to leave the session
     const leaveSession = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
@@ -67,7 +65,7 @@ const ActiveSessionScreen = ({ navigation }) => {
 
             if (response.ok) {
                 Alert.alert('Success', 'You have left the session.');
-                setActiveSession(null); // Clear the active session
+                setActiveSession(null); 
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to leave session.');
@@ -78,7 +76,6 @@ const ActiveSessionScreen = ({ navigation }) => {
         }
     };
 
-    // Function to delete the session (for the host)
     const deleteSession = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
@@ -96,7 +93,7 @@ const ActiveSessionScreen = ({ navigation }) => {
 
             if (response.ok) {
                 Alert.alert('Success', 'Session deleted successfully.');
-                setActiveSession(null); // Clear the active session
+                setActiveSession(null); 
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to delete session.');
@@ -149,7 +146,6 @@ const ActiveSessionScreen = ({ navigation }) => {
                     })}
                 </Text>
 
-                {/* Display a map preview with a marker */}
                 <MapView
                     style={styles.map}
                     initialRegion={{
@@ -169,7 +165,7 @@ const ActiveSessionScreen = ({ navigation }) => {
                     />
                 </MapView>
 
-                {/* Conditionally render delete button for the host or leave button for attendees */}
+
                 {userId === activeSession.userId ? (
                     <TouchableOpacity style={styles.deleteButton} onPress={deleteSession}>
                         <Text style={styles.deleteButtonText}>Delete Session</Text>

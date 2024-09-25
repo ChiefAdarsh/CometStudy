@@ -34,8 +34,8 @@ const SignupScreen = ({ navigation }) => {
             if (response.ok) {
                 const token = data.token;
                 await AsyncStorage.setItem('token', token);
-                await AsyncStorage.setItem('user', JSON.stringify({ userId: data.userId }));  // Storing userId from response
-                navigation.navigate('MainApp'); // Navigate to main app after signup
+                await AsyncStorage.setItem('user', JSON.stringify({ userId: data.userId }));  
+                navigation.navigate('MainApp'); 
             } else {
                 Alert.alert('Signup Failed', data.message);
             }
@@ -46,7 +46,7 @@ const SignupScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            {/* Logo or Branding Image */}
+            
             <Image
                 source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/17/University_of_Texas_at_Dallas_seal.svg/1200px-University_of_Texas_at_Dallas_seal.svg.png' }} // Replace with your app's logo URL or import
                 style={styles.logo}

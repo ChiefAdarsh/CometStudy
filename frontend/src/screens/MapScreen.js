@@ -17,7 +17,7 @@ import { styles } from '../styles/styles';
 import { decodePolyline } from '../utils/polylineDecoder';
 import { utdBuildings } from './utdBuildings';
 
-const GOOGLE_API_KEY = 'AIzaSyAvGxdBp1HKySVrivYF8d5pt589O9K5hUY'; // Replace with your API key
+const GOOGLE_API_KEY = 'AIzaSyAvGxdBp1HKySVrivYF8d5pt589O9K5hUY'; 
 
 const MapScreen = ({ navigation }) => {
     const [markerCoords, setMarkerCoords] = useState([]);
@@ -34,9 +34,9 @@ const MapScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
 
     const mapRef = useRef(null);
-    const markerRefs = useRef({}); // Store marker references
+    const markerRefs = useRef({}); 
 
-    // State to track if the user has an active session
+   
     const [hasActiveSession, setHasActiveSession] = useState(false);
 
     useEffect(() => {
@@ -81,9 +81,9 @@ const MapScreen = ({ navigation }) => {
                 }
 
                 const { allSessions, activeSession } = await response.json();
-                setMarkerCoords(allSessions);  // Update state with all sessions
+                setMarkerCoords(allSessions);  
 
-                // If the user has an active session, set the state
+              
                 if (activeSession) {
                     setHasActiveSession(true);
                 } else {
@@ -114,13 +114,14 @@ const MapScreen = ({ navigation }) => {
                     name: newSession.newSessionName,
                     roomNumber: newSession.roomNumber,
                     expiryTime: new Date(newSession.temporaryExpiryTime).toISOString(),
+                    description: newSession.description,  
                 }),
             });
 
             if (response.ok) {
                 const session = await response.json();
                 setMarkerCoords((prev) => [...prev, session]);
-                setHasActiveSession(true);  // Set active session after successfully adding a session
+                setHasActiveSession(true);  
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to add session.');
@@ -159,7 +160,7 @@ const MapScreen = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem('token');
 
-            // Make the DELETE request to the backend
+            
             const response = await fetch(`http://10.122.152.209:8000/sessions/${id}`, {
                 method: 'DELETE',
                 headers: {
@@ -168,19 +169,19 @@ const MapScreen = ({ navigation }) => {
             });
 
             if (response.ok) {
-                // Remove the deleted session from the frontend state
+                
                 const updatedMarkers = markerCoords.filter((marker) => marker.id !== id);
                 setMarkerCoords(updatedMarkers);
 
-                // Check if the deleted session belonged to the current user
+                
                 const user = await AsyncStorage.getItem('user');
                 const { userId } = JSON.parse(user);
 
                 const deletedSession = markerCoords.find((marker) => marker.id === id);
 
-                // If the deleted session belonged to the logged-in user, set hasActiveSession to false
+                
                 if (deletedSession && deletedSession.userId === userId) {
-                    setHasActiveSession(false);  // Re-enable the Add button for the user
+                    setHasActiveSession(false);  
                 }
             } else {
                 const errorData = await response.json();
@@ -191,7 +192,7 @@ const MapScreen = ({ navigation }) => {
 
     const handleAttendSession = async (sessionId) => {
         try {
-            const token = await AsyncStorage.getItem('token');  // Assuming the JWT is stored in AsyncStorage
+            const token = await AsyncStorage.getItem('token');  
             const response = await fetch(`http://10.122.152.209:8000/sessions/${sessionId}/attend`, {
                 method: 'POST',
                 headers: {
@@ -203,7 +204,7 @@ const MapScreen = ({ navigation }) => {
             if (response.ok) {
                 const session = await response.json();
                 Alert.alert('Success', 'You have joined the session.');
-                // Optionally update the session list or state to reflect the user is now attending
+               
             } else {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to join session.');
@@ -213,7 +214,7 @@ const MapScreen = ({ navigation }) => {
         }
     };
 
-    // Function to automatically show the marker Callout
+    
     const showCallout = (id) => {
         if (markerRefs.current[id]) {
             markerRefs.current[id].showCallout();
@@ -247,7 +248,7 @@ const MapScreen = ({ navigation }) => {
                     <Marker
                         key={coord.id}
                         coordinate={coord}
-                        ref={(ref) => (markerRefs.current[coord.id] = ref)}  // Store marker refs
+                        ref={(ref) => (markerRefs.current[coord.id] = ref)}  
                     >
                         <Callout onPress={() => getDirections(coord)}>
                             <View style={styles.calloutView}>
@@ -255,7 +256,7 @@ const MapScreen = ({ navigation }) => {
                                     <Text style={styles.calloutTitle}>{coord.name}</Text>
                                     <TouchableOpacity
                                         style={styles.addSessionButton}
-                                        onPress={() => handleAttendSession(coord.id)}  // Add the session join logic
+                                        onPress={() => handleAttendSession(coord.id)}  
                                     >
                                         <Ionicons name="add-circle" size={35} color="#007AFF" />
                                     </TouchableOpacity>
@@ -267,6 +268,9 @@ const MapScreen = ({ navigation }) => {
                                         hour: '2-digit',
                                         minute: '2-digit',
                                     })}
+                                </Text>
+                                <Text style={styles.calloutDescription}>
+                                    Desription: {coord.description}
                                 </Text>
                             </View>
                         </Callout>
@@ -306,7 +310,7 @@ const MapScreen = ({ navigation }) => {
             <StudySessionsList
                 filteredMarkers={filteredMarkers}
                 getDirections={getDirections}
-                showCallout={showCallout}  // Pass showCallout to the list
+                showCallout={showCallout}  
                 handleDelete={handleDelete}
             />
         </View>
