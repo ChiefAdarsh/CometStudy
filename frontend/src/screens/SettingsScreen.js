@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     header: {
         paddingTop: 60,
         paddingBottom: 20,
-        backgroundColor: '#007AFF',
+        backgroundColor: '#F8F9FA',
         justifyContent: 'center',
         alignItems: 'center',
         borderBottomLeftRadius: 20,
@@ -78,7 +78,8 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#fff',
+        color: '#000',
+        paddingTop: 10,
     },
     optionList: {
         marginVertical: 30,
