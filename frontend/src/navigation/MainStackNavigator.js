@@ -26,18 +26,23 @@ const TabNavigator = () => {
                     } else if (route.name === 'Settings') {
                         iconName = 'settings';
                     } else if (route.name === 'ActiveSession') {
-                        iconName = 'information-circle';
+                        iconName = 'flag';
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#007AFF',
                 tabBarInactiveTintColor: 'gray',
                 headerShown: false,
+                tabBarLabel: '',
+                tabBarStyle: {
+                    paddingBottom: 8, // Adjust the bottom padding to push icons down
+                    height: 70, // Optional: Increase the height of the tab bar
+                },
             })}
         >
-            <Tab.Screen name="Map" component={MapScreen} />
-            <Tab.Screen name="ActiveSession" component={ActiveSessionScreen} options={{ title: 'Active Session' }} />
-            <Tab.Screen name="Settings" component={SettingsScreen} />
+            <Tab.Screen name="Map" component={MapScreen} options={{ headerShown: false }} />
+            <Tab.Screen name="ActiveSession" component={ActiveSessionScreen} options={{ headerShown: false }} />
+            <Tab.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }}/>
         </Tab.Navigator>
     );
 };
