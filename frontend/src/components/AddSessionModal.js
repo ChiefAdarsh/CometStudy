@@ -8,13 +8,16 @@ import {
     Platform,
     TouchableOpacity,
     Text,
+    FlatList,
     Alert,
+    StyleSheet,
 } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { styles } from '../styles/styles';
+import { courseList } from '../context/CourseList';
 
-const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4'; // Replace with your API key
+const GOOGLE_API_KEY = 'AIzaSyAvGxdBp1HKySVrivYF8d5pt589O9K5hUY';
 
 const AddSessionModal = ({
     modalVisible,
@@ -23,17 +26,24 @@ const AddSessionModal = ({
     utdBuildings,
 }) => {
     const [newSessionName, setNewSessionName] = useState('');
+    const [filteredCourses, setFilteredCourses] = useState([]);  // Store filtered course list
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [roomNumber, setRoomNumber] = useState('');
     const [temporaryExpiryTime, setTemporaryExpiryTime] = useState(new Date(Date.now() + 3600000));
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedExpiryTime, setSelectedExpiryTime] = useState(null);
 
-    // Filter the UTD buildings based on the search text
-    const [searchText, setSearchText] = useState('');
-    const filteredUtdBuildings = utdBuildings.filter((building) =>
-        building.toLowerCase().includes(searchText.toLowerCase())
-    );
+    const handleCourseInput = (text) => {
+        setNewSessionName(text);
+        if (text.length > 0) {
+            const filtered = courseList.filter(course =>
+                course.toLowerCase().includes(text.toLowerCase())
+            );
+            setFilteredCourses(filtered);
+        } else {
+            setFilteredCourses([]);
+        }
+    };
 
     return (
         <Modal
@@ -68,7 +78,7 @@ const AddSessionModal = ({
                             container: { flex: 0 },
                         }}
                         renderRow={(rowData) => {
-                            const utdMatch = filteredUtdBuildings.find(building =>
+                            const utdMatch = utdBuildings.find(building =>
                                 rowData.description.toLowerCase().includes(building.toLowerCase())
                             );
                             return utdMatch ? (
@@ -78,18 +88,40 @@ const AddSessionModal = ({
                             );
                         }}
                     />
+
                     <TextInput
                         style={styles.textInput}
                         placeholder="Room Number"
                         value={roomNumber}
                         onChangeText={setRoomNumber}
                     />
+
                     <TextInput
                         style={styles.textInput}
                         placeholder="Name of Study Session"
                         value={newSessionName}
-                        onChangeText={setNewSessionName}
+                        onChangeText={handleCourseInput}  // Autocomplete input
                     />
+
+                    {/* Styled autocomplete dropdown */}
+                    {filteredCourses.length > 0 && (
+                        <FlatList
+                            style={customStyles.suggestionsList}
+                            data={filteredCourses}
+                            keyExtractor={(item) => item}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    style={customStyles.suggestionItem}
+                                    onPress={() => {
+                                        setNewSessionName(item);
+                                        setFilteredCourses([]);
+                                    }}
+                                >
+                                    <Text style={customStyles.suggestionText}>{item}</Text>
+                                </TouchableOpacity>
+                            )}
+                        />
+                    )}
 
                     <View style={styles.expiryTimeContainer}>
                         <Text style={styles.label}>Expiry Time:</Text>
@@ -108,15 +140,13 @@ const AddSessionModal = ({
 
                     {showDatePicker && (
                         <DateTimePicker
-                            value={selectedExpiryTime || temporaryExpiryTime}  // Use selectedExpiryTime if available
+                            value={selectedExpiryTime || temporaryExpiryTime}
                             mode="time"
                             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                             onChange={(event, selectedDate) => {
                                 if (event.type === "set") {
-                                    // User confirmed the time selection
                                     setSelectedExpiryTime(selectedDate || temporaryExpiryTime);
                                 }
-                                // Close the picker regardless of whether a date was selected or not
                                 setShowDatePicker(Platform.OS === 'ios');
                             }}
                         />
@@ -133,9 +163,8 @@ const AddSessionModal = ({
                                         newSessionName,
                                         selectedLocation,
                                         roomNumber,
-                                        temporaryExpiryTime: expiryTimeToUse,  // Use the selected time or the default one
+                                        temporaryExpiryTime: expiryTimeToUse,
                                     };
-                                    console.log('Session Data to be sent:', sessionData);  // Log the session data
 
                                     handleAddSession(sessionData);
                                     setModalVisible(false);
@@ -166,5 +195,27 @@ const AddSessionModal = ({
         </Modal>
     );
 };
+
+// Custom styles for the dropdown
+const customStyles = StyleSheet.create({
+    suggestionsList: {
+        backgroundColor: '#ffffff',
+        maxHeight: 150, // Limit the height of the dropdown
+        borderRadius: 0,
+        marginTop: -10,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#ffffff'
+    },
+    suggestionItem: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+    },
+    suggestionText: {
+        fontSize: 16,
+        color: '#333',
+    },
+});
 
 export default AddSessionModal;

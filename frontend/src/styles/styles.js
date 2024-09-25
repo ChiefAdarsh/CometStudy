@@ -30,6 +30,9 @@ export const styles = StyleSheet.create({
         zIndex: 1,
         fontSize: 16,
     },
+    suggestionsList: {
+        maxHeight: 150, // Adjust this value as needed
+    },
     expiryTimeContainer: {
         flexDirection: 'row',
         alignItems: 'center',

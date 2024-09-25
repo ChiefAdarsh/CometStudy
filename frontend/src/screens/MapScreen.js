@@ -17,7 +17,7 @@ import { styles } from '../styles/styles';
 import { decodePolyline } from '../utils/polylineDecoder';
 import { utdBuildings } from './utdBuildings';
 
-const GOOGLE_API_KEY = 'AIzaSyAjUJPXPtiOBeGtodNJIcKbmGnchmaNdu4'; // Replace with your API key
+const GOOGLE_API_KEY = 'AIzaSyAvGxdBp1HKySVrivYF8d5pt589O9K5hUY'; // Replace with your API key
 
 const MapScreen = ({ navigation }) => {
     const [markerCoords, setMarkerCoords] = useState([]);
