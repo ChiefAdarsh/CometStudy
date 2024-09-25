@@ -26,7 +26,8 @@ const AddSessionModal = ({
     utdBuildings,
 }) => {
     const [newSessionName, setNewSessionName] = useState('');
-    const [filteredCourses, setFilteredCourses] = useState([]);  // Store filtered course list
+    const [description, setDescription] = useState('');  // State for the description input
+    const [filteredCourses, setFilteredCourses] = useState([]);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [roomNumber, setRoomNumber] = useState('');
     const [temporaryExpiryTime, setTemporaryExpiryTime] = useState(new Date(Date.now() + 3600000));
@@ -100,7 +101,7 @@ const AddSessionModal = ({
                         style={styles.textInput}
                         placeholder="Name of Study Session"
                         value={newSessionName}
-                        onChangeText={handleCourseInput}  // Autocomplete input
+                        onChangeText={handleCourseInput}
                     />
 
                     {/* Styled autocomplete dropdown */}
@@ -122,6 +123,16 @@ const AddSessionModal = ({
                             )}
                         />
                     )}
+
+                    {/* New description input box with vertically centered placeholder text */}
+                    <TextInput
+                        style={[styles.textInput, customStyles.descriptionInput]}  // Apply the custom styles
+                        placeholder="Description (optional)"
+                        value={description}
+                        onChangeText={setDescription}
+                        multiline={true}
+                        numberOfLines={4}
+                    />
 
                     <View style={styles.expiryTimeContainer}>
                         <Text style={styles.label}>Expiry Time:</Text>
@@ -163,12 +174,14 @@ const AddSessionModal = ({
                                         newSessionName,
                                         selectedLocation,
                                         roomNumber,
+                                        description,
                                         temporaryExpiryTime: expiryTimeToUse,
                                     };
 
                                     handleAddSession(sessionData);
                                     setModalVisible(false);
                                     setNewSessionName('');
+                                    setDescription('');
                                     setSelectedLocation(null);
                                     setRoomNumber('');
                                     setTemporaryExpiryTime(new Date());
@@ -183,6 +196,7 @@ const AddSessionModal = ({
                             onPress={() => {
                                 setModalVisible(false);
                                 setNewSessionName('');
+                                setDescription('');
                                 setSelectedLocation(null);
                                 setRoomNumber('');
                                 setTemporaryExpiryTime(new Date());
@@ -200,7 +214,7 @@ const AddSessionModal = ({
 const customStyles = StyleSheet.create({
     suggestionsList: {
         backgroundColor: '#ffffff',
-        maxHeight: 150, // Limit the height of the dropdown
+        maxHeight: 150,
         borderRadius: 0,
         marginTop: -10,
         marginBottom: 10,
@@ -215,6 +229,12 @@ const customStyles = StyleSheet.create({
     suggestionText: {
         fontSize: 16,
         color: '#333',
+    },
+    descriptionInput: {
+        textAlignVertical: 'center',  // Centers text vertically
+        height: 40,                  // Adjust height for multiline input
+        paddingVertical: 10,          // Adjust padding for top and bottom
+        fontSize: 16,                 // Adjust font size for better readability
     },
 });
 
