@@ -1,4 +1,3 @@
-// utils/polylineDecoder.js
 export const decodePolyline = (encoded) => {
     let points = [];
     let index = 0;

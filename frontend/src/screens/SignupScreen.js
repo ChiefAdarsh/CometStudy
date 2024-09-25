@@ -1,5 +1,3 @@
-// screens/SignupScreen.js
-
 import React, { useState } from 'react';
 import {
     View,
@@ -8,6 +6,7 @@ import {
     TouchableOpacity,
     StyleSheet,
     Alert,
+    Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -35,9 +34,8 @@ const SignupScreen = ({ navigation }) => {
             if (response.ok) {
                 const token = data.token;
                 await AsyncStorage.setItem('token', token);
-                await AsyncStorage.setItem('user', JSON.stringify(user));
-                await AsyncStorage.setItem('token', response.data.token);  // Store the JWT token
-                navigation.navigate('MainApp'); // Navigate to the main app
+                await AsyncStorage.setItem('user', JSON.stringify({ userId: data.userId }));  // Storing userId from response
+                navigation.navigate('MainApp'); // Navigate to main app after signup
             } else {
                 Alert.alert('Signup Failed', data.message);
             }
@@ -48,36 +46,43 @@ const SignupScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Sign Up</Text>
+            {/* Logo or Branding Image */}
+            <Image
+                source={{ uri: 'https://upload.wikimedia.org/wikipedia/en/thumb/1/17/University_of_Texas_at_Dallas_seal.svg/1200px-University_of_Texas_at_Dallas_seal.svg.png' }} // Replace with your app's logo URL or import
+                style={styles.logo}
+                resizeMode="contain"
+            />
+
+            <Text style={styles.title}>Create Your Account</Text>
 
             <View style={styles.formContainer}>
-                <Text style={styles.label}>Username</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Enter username..."
+                    placeholder="Username"
                     value={username}
                     onChangeText={setUsername}
                     autoCapitalize="none"
+                    placeholderTextColor="#888"
                 />
 
-                <Text style={styles.label}>Password</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Enter password..."
+                    placeholder="Password"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
                     autoCapitalize="none"
+                    placeholderTextColor="#888"
                 />
 
-                <Text style={styles.label}>Confirm Password</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="Confirm password..."
+                    placeholder="Confirm Password"
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry
                     autoCapitalize="none"
+                    placeholderTextColor="#888"
                 />
 
                 <TouchableOpacity style={styles.button} onPress={handleSignup}>
@@ -85,7 +90,9 @@ const SignupScreen = ({ navigation }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-                    <Text style={styles.loginText}>Already have an account? Log in</Text>
+                    <Text style={styles.loginText}>
+                        Already have an account? <Text style={styles.loginLink}>Log In</Text>
+                    </Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -97,53 +104,67 @@ export default SignupScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFF',
+        backgroundColor: '#F5F5F5',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 16,
+        paddingHorizontal: 20,
+    },
+    logo: {
+        width: 200,
+        height: 200,
+        marginBottom: 30,
     },
     title: {
-        fontSize: 36,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#0066CC',
+        color: '#333',
         marginBottom: 40,
+        textAlign: 'center',
     },
     formContainer: {
         width: '100%',
         padding: 20,
-        borderColor: '#333',
-        borderWidth: 2,
+        borderColor: '#E5E5E5',
+        borderWidth: 1,
         borderRadius: 10,
-        backgroundColor: '#f9f9f9',
-    },
-    label: {
-        fontSize: 16,
-        color: '#333',
-        marginBottom: 5,
+        backgroundColor: '#FFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 4,
     },
     input: {
         width: '100%',
         height: 50,
-        borderColor: '#333',
+        borderColor: '#DDD',
         borderWidth: 1,
-        borderRadius: 5,
-        paddingHorizontal: 10,
-        marginBottom: 20,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        marginBottom: 15,
         fontSize: 16,
+        backgroundColor: '#F9F9F9',
     },
     button: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#0066CC',
         paddingVertical: 15,
-        borderRadius: 5,
+        borderRadius: 8,
         alignItems: 'center',
+        marginTop: 10,
     },
     buttonText: {
         fontSize: 18,
         color: '#FFF',
+        fontWeight: '600',
     },
     loginText: {
         marginTop: 20,
-        color: '#007AFF',
+        color: '#555',
         textAlign: 'center',
+        fontSize: 14,
+    },
+    loginLink: {
+        color: '#0066CC',
+        fontWeight: 'bold',
     },
 });

@@ -236,6 +236,7 @@ const MapScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            
             <MapView
                 ref={mapRef}
                 style={styles.map}
@@ -281,6 +282,8 @@ const MapScreen = ({ navigation }) => {
                     />
                 )}
             </MapView>
+
+            
 
             <TextInput
                 style={styles.topSearchInput}

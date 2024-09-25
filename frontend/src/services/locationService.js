@@ -1,5 +1,3 @@
-// src/services/locationService.js
-
 import * as Location from 'expo-location';
 
 export const requestLocationPermission = async () => {

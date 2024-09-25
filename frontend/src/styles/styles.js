@@ -1,5 +1,3 @@
-// styles/styles.js
-
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
@@ -31,6 +29,7 @@ export const styles = StyleSheet.create({
         zIndex: 1,
         fontSize: 16,
     },
+    
     addSessionButton: {
         marginLeft: 'auto',  // Pushes the button to the right
         justifyContent: 'center',
@@ -110,7 +109,7 @@ export const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     studySessionsContainer: {
-        flex: 0.4, // Set this to take 40% of the screen
+        flex: 0.4, 
         backgroundColor: '#f7f7f7',
         borderTopLeftRadius: 15,
         borderTopRightRadius: 15,
