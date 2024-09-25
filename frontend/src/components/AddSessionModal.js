@@ -34,6 +34,11 @@ const AddSessionModal = ({
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [selectedExpiryTime, setSelectedExpiryTime] = useState(null);
 
+    const utdRegion = {
+        northeast: { lat: 32.9925, lng: -96.7422 },  
+        southwest: { lat: 32.9825, lng: -96.7555 },  
+    };
+
     const handleCourseInput = (text) => {
         setNewSessionName(text);
         if (text.length > 0) {
@@ -65,14 +70,24 @@ const AddSessionModal = ({
                         minLength={2}
                         fetchDetails={true}
                         onPress={(data, details = null) => {
-                            setSelectedLocation({
-                                latitude: details.geometry.location.lat,
-                                longitude: details.geometry.location.lng,
-                            });
+                            const { lat, lng } = details.geometry.location;
+                            if (lat >= utdRegion.southwest.lat && lat <= utdRegion.northeast.lat &&
+                                lng >= utdRegion.southwest.lng && lng <= utdRegion.northeast.lng) {
+                                setSelectedLocation({
+                                    latitude: lat,
+                                    longitude: lng,
+                                });
+                            } else {
+                                Alert.alert("Invalid Location", "Please select a location within UT Dallas.");
+                                setSelectedLocation(null);
+                            }
                         }}
                         query={{
                             key: GOOGLE_API_KEY,
                             language: 'en',
+                            location: `${32.9867},${-96.7505}`,
+                            radius: 1000, 
+                            bounds: `${utdRegion.southwest.lat},${utdRegion.southwest.lng}|${utdRegion.northeast.lat},${utdRegion.northeast.lng}`,
                         }}
                         styles={{
                             textInput: styles.searchInput,
