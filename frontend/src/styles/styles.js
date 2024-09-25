@@ -16,6 +16,7 @@ export const styles = StyleSheet.create({
         right: 20,
         zIndex: 2,
     },
+    
     topSearchInput: {
         position: 'absolute',
         top: 60,
@@ -29,6 +30,28 @@ export const styles = StyleSheet.create({
         elevation: 2,
         zIndex: 1,
         fontSize: 16,
+    },
+    addSessionButton: {
+        marginLeft: 'auto',  // Pushes the button to the right
+        justifyContent: 'center',
+    },
+    calloutView: {
+        width: 200,
+        padding: 5,
+        flexDirection: 'column',
+    },
+    rowContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',  // Align title and button vertically in the center
+        justifyContent: 'space-between',  // Ensure the button stays on the right
+        width: '100%',
+    },
+    calloutTitle: {
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    calloutText: {
+        fontSize: 14,
     },
     suggestionsList: {
         maxHeight: 150, // Adjust this value as needed

@@ -35,6 +35,8 @@ const SignupScreen = ({ navigation }) => {
             if (response.ok) {
                 const token = data.token;
                 await AsyncStorage.setItem('token', token);
+                await AsyncStorage.setItem('user', JSON.stringify(user));
+                await AsyncStorage.setItem('token', response.data.token);  // Store the JWT token
                 navigation.navigate('MainApp'); // Navigate to the main app
             } else {
                 Alert.alert('Signup Failed', data.message);

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,21 @@ import MapView, { Marker } from 'react-native-maps';
 const ActiveSessionScreen = ({ navigation }) => {
     const [activeSession, setActiveSession] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState(null); // Track the user ID
+
+    // Fetch the user ID from AsyncStorage
+    useEffect(() => {
+        const fetchUserId = async () => {
+            const storedUser = await AsyncStorage.getItem('user');
+            if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                setUserId(parsedUser.userId); // Set userId to the logged-in user's ID
+            } else {
+                console.log('No user found in AsyncStorage.');
+            }
+        };
+        fetchUserId();
+    }, []);
 
     const fetchActiveSession = async () => {
         try {
@@ -29,6 +44,66 @@ const ActiveSessionScreen = ({ navigation }) => {
             setActiveSession(null);
         } finally {
             setLoading(false);
+        }
+    };
+
+    
+
+    // Function to leave the session
+    const leaveSession = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                Alert.alert('Error', 'No token found, please log in again.');
+                return;
+            }
+
+            const response = await fetch(`http://10.122.152.209:8000/sessions/${activeSession.id}/leave`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                Alert.alert('Success', 'You have left the session.');
+                setActiveSession(null); // Clear the active session
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to leave session.');
+            }
+        } catch (error) {
+            console.error('Error leaving session:', error);
+            Alert.alert('Error', error.message || 'Unable to leave session.');
+        }
+    };
+
+    // Function to delete the session (for the host)
+    const deleteSession = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                Alert.alert('Error', 'No token found, please log in again.');
+                return;
+            }
+
+            const response = await fetch(`http://10.122.152.209:8000/sessions/${activeSession.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                Alert.alert('Success', 'Session deleted successfully.');
+                setActiveSession(null); // Clear the active session
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete session.');
+            }
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            Alert.alert('Error', error.message || 'Unable to delete session.');
         }
     };
 
@@ -93,6 +168,17 @@ const ActiveSessionScreen = ({ navigation }) => {
                         description={`Room: ${activeSession.roomNumber}`}
                     />
                 </MapView>
+
+                {/* Conditionally render delete button for the host or leave button for attendees */}
+                {userId === activeSession.userId ? (
+                    <TouchableOpacity style={styles.deleteButton} onPress={deleteSession}>
+                        <Text style={styles.deleteButtonText}>Delete Session</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity style={styles.leaveButton} onPress={leaveSession}>
+                        <Text style={styles.leaveButtonText}>Leave Session</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             <TouchableOpacity style={styles.goBackButton} onPress={() => navigation.goBack()}>
@@ -108,7 +194,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f2f2f2',
         padding: 20,
         alignItems: 'center',
-        paddingTop: 175,  // Add padding to move content down
+        paddingTop: 175,
     },
     card: {
         backgroundColor: '#fff',
@@ -173,13 +259,33 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
-    label: {
-        color: 'blue',
-        fontWeight: 'bold',
+    leaveButton: {
+        backgroundColor: '#ff3b30',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        borderRadius: 25,
+        marginTop: 20,
     },
-    detail: {
-        fontSize: 18,
-        marginBottom: 10,
+    leaveButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    deleteButton: {
+        backgroundColor: '#ff3b30',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        borderRadius: 25,
+        marginTop: 20,
+    },
+    deleteButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 

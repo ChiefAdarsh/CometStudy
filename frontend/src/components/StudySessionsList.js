@@ -6,9 +6,10 @@ import { styles } from '../styles/styles';
 const StudySessionsList = ({
     filteredMarkers,
     getDirections,
+    showCallout,  // Add showCallout prop
     handleDelete,
 }) => {
-    const [isEditMode, setIsEditMode] = useState(false);  // Add state to track edit mode
+    const [isEditMode, setIsEditMode] = useState(false);
 
     // Function to confirm deletion
     const confirmDelete = (id) => {
@@ -26,7 +27,7 @@ const StudySessionsList = ({
                 {/* Toggle Edit Mode */}
                 <TouchableOpacity onPress={() => setIsEditMode(!isEditMode)}>
                     <Text style={styles.editButtonText}>
-                        {isEditMode ? 'Done' : 'Edit'}  {/* Toggle text between 'Edit' and 'Done' */}
+                        {isEditMode ? 'Done' : 'Edit'}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -48,7 +49,7 @@ const StudySessionsList = ({
 
                     return (
                         <View key={marker.id} style={styles.locationItemContainer}>
-                            {isEditMode && (  // Conditionally show the delete button only in edit mode
+                            {isEditMode && (
                                 <TouchableOpacity
                                     onPress={() => confirmDelete(marker.id)}
                                     style={styles.deleteButton}
@@ -60,7 +61,8 @@ const StudySessionsList = ({
                                 style={styles.locationItem}
                                 onPress={() => {
                                     if (!isEditMode) {
-                                        getDirections(marker);  // Don't navigate if in edit mode
+                                        showCallout(marker.id);  // Automatically show Callout
+                                        getDirections(marker);
                                     }
                                 }}
                             >

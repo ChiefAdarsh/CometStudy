@@ -33,10 +33,11 @@ const MapScreen = ({ navigation }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [searchText, setSearchText] = useState('');
 
+    const mapRef = useRef(null);
+    const markerRefs = useRef({}); // Store marker references
+
     // State to track if the user has an active session
     const [hasActiveSession, setHasActiveSession] = useState(false);
-
-    const mapRef = useRef(null);
 
     useEffect(() => {
         (async () => {
@@ -143,7 +144,7 @@ const MapScreen = ({ navigation }) => {
                 setDirectionsPath(points);
 
                 mapRef.current.fitToCoordinates(points, {
-                    edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
+                    edgePadding: { top: 200, right: 150, bottom: 0, left: 0 },
                     animated: true,
                 });
             } else {
@@ -183,16 +184,41 @@ const MapScreen = ({ navigation }) => {
                 }
             } else {
                 const errorData = await response.json();
-                //console.error('Failed to delete session:', errorData);
-                //Alert.alert('Error', errorData.message || 'Failed to delete session');
             }
         } catch (error) {
-            //console.error('Error deleting study session:', error);
-            //Alert.alert('Error', 'Failed to delete session due to an internal error.');
         }
     };
 
+    const handleAttendSession = async (sessionId) => {
+        try {
+            const token = await AsyncStorage.getItem('token');  // Assuming the JWT is stored in AsyncStorage
+            const response = await fetch(`http://10.122.152.209:8000/sessions/${sessionId}/attend`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
+            if (response.ok) {
+                const session = await response.json();
+                Alert.alert('Success', 'You have joined the session.');
+                // Optionally update the session list or state to reflect the user is now attending
+            } else {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to join session.');
+            }
+        } catch (error) {
+            Alert.alert('Error', error.message || 'Unable to join the session.');
+        }
+    };
+
+    // Function to automatically show the marker Callout
+    const showCallout = (id) => {
+        if (markerRefs.current[id]) {
+            markerRefs.current[id].showCallout();
+        }
+    };
 
     const filteredMarkers = markerCoords.filter((marker) =>
         marker.name.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -215,12 +241,25 @@ const MapScreen = ({ navigation }) => {
                 style={styles.map}
                 region={region}
                 showsUserLocation={true}
+                paddingAdjustmentBehavior="automatic"
             >
                 {markerCoords.map((coord) => (
-                    <Marker key={coord.id} coordinate={coord}>
+                    <Marker
+                        key={coord.id}
+                        coordinate={coord}
+                        ref={(ref) => (markerRefs.current[coord.id] = ref)}  // Store marker refs
+                    >
                         <Callout onPress={() => getDirections(coord)}>
                             <View style={styles.calloutView}>
-                                <Text style={styles.calloutTitle}>{coord.name}</Text>
+                                <View style={styles.rowContainer}>
+                                    <Text style={styles.calloutTitle}>{coord.name}</Text>
+                                    <TouchableOpacity
+                                        style={styles.addSessionButton}
+                                        onPress={() => handleAttendSession(coord.id)}  // Add the session join logic
+                                    >
+                                        <Ionicons name="add-circle" size={35} color="#007AFF" />
+                                    </TouchableOpacity>
+                                </View>
                                 <Text style={styles.calloutText}>Room: {coord.roomNumber}</Text>
                                 <Text style={styles.calloutText}>
                                     Expires at:{' '}
@@ -243,8 +282,6 @@ const MapScreen = ({ navigation }) => {
                 )}
             </MapView>
 
-
-
             <TextInput
                 style={styles.topSearchInput}
                 placeholder="Search Study Sessions"
@@ -253,14 +290,12 @@ const MapScreen = ({ navigation }) => {
                 placeholderTextColor="#888"
             />
 
-            {/* Conditionally render the Add button based on active session */}
             {!hasActiveSession && (
                 <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
                     <Ionicons name="add-circle" size={80} color="#007AFF" />
                 </TouchableOpacity>
             )}
 
-            {/* AddSessionModal */}
             <AddSessionModal
                 modalVisible={modalVisible}
                 setModalVisible={setModalVisible}
@@ -271,10 +306,11 @@ const MapScreen = ({ navigation }) => {
             <StudySessionsList
                 filteredMarkers={filteredMarkers}
                 getDirections={getDirections}
+                showCallout={showCallout}  // Pass showCallout to the list
                 handleDelete={handleDelete}
             />
         </View>
     );
 };
 
-export default MapScreen;  
+export default MapScreen;

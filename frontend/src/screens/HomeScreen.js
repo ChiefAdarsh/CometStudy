@@ -30,8 +30,14 @@ const HomeScreen = ({ navigation }) => {
                 const data = await response.json();
                 if (response.ok) {
                     const token = data.token;
+                    const userId = data.userId; // Assuming the backend sends userId in the login response
+
+                    // Store token and userId in AsyncStorage
                     await AsyncStorage.setItem('token', token);
-                    navigation.navigate('MainApp'); // Navigate to MainApp which contains the tab navigator
+                    await AsyncStorage.setItem('user', JSON.stringify({ userId }));  // Store userId in AsyncStorage
+
+                    // Navigate to MainApp which contains the tab navigator
+                    navigation.navigate('MainApp');
                 } else {
                     Alert.alert('Login Failed', data.message);
                 }

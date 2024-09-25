@@ -29,35 +29,14 @@ const User = mongoose.model('User', userSchema);
 
 // Mongoose Session schema and model
 const sessionSchema = new mongoose.Schema({
-    id: {
-        type: String,
-        required: true,
-    },
-    latitude: {
-        type: Number,
-        required: true,
-    },
-    longitude: {
-        type: Number,
-        required: true,
-    },
-    name: {
-        type: String,
-        required: true,
-    },
-    roomNumber: {
-        type: String,
-        required: true,
-    },
-    expiryTime: {
-        type: Date,
-        required: true,
-    },
-    userId: {  // Make sure userId is part of the schema
-        type: mongoose.Schema.Types.ObjectId,  // Reference the User model
-        ref: 'User',
-        required: true,  // Ensure that every session must have a user associated
-    },
+    id: { type: String, required: true },
+    latitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
+    name: { type: String, required: true },
+    roomNumber: { type: String, required: true },
+    expiryTime: { type: Date, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },  // Reference to user
+    attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],  // Store an array of user IDs attending the session
 });
 
 const Session = mongoose.model('Session', sessionSchema);
@@ -170,14 +149,17 @@ app.delete('/sessions/:id', authenticate, async (req, res) => {
     }
 });
 
-// Backend route to fetch the active session for the logged-in user
 app.get('/sessions/active', authenticate, async (req, res) => {
     const userId = req.user.userId;
 
     try {
+        // Find any active session where the user is either the creator or an attendee
         const activeSession = await Session.findOne({
-            userId: userId,
-            expiryTime: { $gt: new Date() },  // Find non-expired sessions
+            $or: [
+                { userId: userId },  // User is the creator of the session
+                { attendees: userId }  // User is attending the session
+            ],
+            expiryTime: { $gt: new Date() }  // Find non-expired sessions
         });
 
         if (!activeSession) {
@@ -188,6 +170,69 @@ app.get('/sessions/active', authenticate, async (req, res) => {
     } catch (error) {
         console.error('Error fetching active session:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+app.post('/sessions/:id/attend', authenticate, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.userId;  // Get the logged-in user's ID from JWT
+
+    try {
+        // Find the session the user wants to attend
+        const session = await Session.findOne({ id });
+
+        if (!session) {
+            return res.status(404).json({ message: 'Session not found' });
+        }
+
+        // Check if the user is already attending the session
+        if (session.attendees.includes(userId)) {
+            return res.status(400).json({ message: 'You are already attending this session' });
+        }
+
+        // Add the user's ID to the attendees array
+        session.attendees.push(userId);
+        await session.save();
+
+        res.status(200).json({ message: 'You are now attending the session', session });
+    } catch (error) {
+        console.error('Error attending session:', error);
+        res.status(500).json({ message: 'Failed to attend session' });
+    }
+});
+
+app.post('/sessions/:id/leave', authenticate, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.userId;  // Get the logged-in user's ID from JWT
+
+    try {
+        // Find the session the user wants to leave
+        const session = await Session.findOne({ id });
+
+        if (!session) {
+            return res.status(404).json({ message: 'Session not found' });
+        }
+
+        // Check if the user is the host (session creator)
+        if (session.userId.toString() === userId) {
+            // If the user is the host, delete the session
+            await Session.deleteOne({ id });
+            return res.status(200).json({ message: 'You have deleted the session as the host.' });
+        }
+
+        // Check if the user is attending the session
+        if (!session.attendees.includes(userId)) {
+            return res.status(400).json({ message: 'You are not attending this session' });
+        }
+
+        // Remove the user's ID from the attendees array
+        session.attendees = session.attendees.filter(attendeeId => attendeeId.toString() !== userId);
+        await session.save();
+
+        res.status(200).json({ message: 'You have left the session', session });
+    } catch (error) {
+        console.error('Error leaving session:', error);
+        res.status(500).json({ message: 'Failed to leave session' });
     }
 });
 
@@ -225,16 +270,20 @@ app.post('/signup', async (req, res) => {
 
 // GET /sessions - Fetch all study sessions (authenticated)
 app.get('/sessions', authenticate, async (req, res) => {
-    const userId = req.user.userId;  // Get the userId from the JWT
+    const userId = req.user.userId;
 
     try {
-        // Fetch all sessions for display purposes
+        // Delete expired sessions on the fly
+        const now = new Date();
+        await Session.deleteMany({ expiryTime: { $lt: now } });  // Delete expired sessions before fetching
+
+        // Fetch all sessions after deleting expired ones
         const allSessions = await Session.find();
 
-        // Check if the logged-in user has an active (non-expired) session
+        // Fetch the user's active session (if any)
         const activeSession = await Session.findOne({
             userId: userId,
-            expiryTime: { $gt: new Date() }  // Check for non-expired session
+            expiryTime: { $gt: now },  // Check for non-expired session
         });
 
         res.json({ allSessions, activeSession });
@@ -243,6 +292,7 @@ app.get('/sessions', authenticate, async (req, res) => {
         res.status(500).json({ message: 'Failed to fetch sessions' });
     }
 });
+
 // Start the server
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
